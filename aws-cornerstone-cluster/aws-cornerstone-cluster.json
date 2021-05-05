@@ -1,0 +1,201 @@
+{
+    "typeName": "AWS::Cornerstone::Cluster",
+    "description": "The AWS::Cornerstone::Cluster resource creates an Amazon Cornerstone Cluster.",
+    "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-cornerstone",
+    "definitions": {
+        "Endpoint": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Address": {
+                    "description": "The DNS address of the primary read-write cache node.",
+                    "type": "string"
+                },
+                "Port": {
+                    "description": "The port number that the engine is listening on. ",
+                    "type": "integer"
+                }
+            }
+        },
+        "Node": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Name": {
+                    "description": "",
+                    "type": "string"
+                },
+                "Status": {
+                    "description": "",
+                    "type": "string"
+                },
+                "AvailabilityZone": {
+                    "description": "",
+                    "type": "string"
+                },
+                "CreateTime": {
+                    "description": "",
+                    "type": "string"
+                }
+            }
+        },
+        "Shard": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "Name": {
+                    "description": "The name of the shard.",
+                    "type": "string"
+                },
+                "Status": {
+                    "description": "",
+                    "type": "string"
+                },
+                "Slots": {
+                    "description": "",
+                    "type": "string"
+                },
+                "Nodes": {
+                    "description": "",
+                    "type": "array",
+                    "uniqueItems": false,
+                    "items": {
+                        "$ref": "#/definitions/Node"
+                    }
+                },
+                "NumNodes": {
+                    "description": "",
+                    "type": "integer"
+                }
+            }
+        }
+    },
+    "properties": {
+        "Name": {
+            "description": "The cluster identifier. This parameter is stored as a lowercase string. ",
+            "type": "string"
+        },
+        "Description": {
+            "description": "A user-created description for the Cluster.",
+            "type": "string"
+        },
+        "Status": {
+            "description": "The status of the Cluster",
+            "type": "string"
+        },
+        "NodeType": {
+            "description": "The compute and memory capacity of the nodes in the node group (shard).",
+            "type": "string"
+        },
+        "NumShards": {
+            "description": "A parameter that specifies the number of shards for this Redis cluster.",
+            "type": "integer"
+        },
+        "NumReplicasPerShard": {
+            "description": "An optional parameter that specifies the number of replica nodes in each node group (shard). Valid values are 0 to 5.",
+            "type": "integer"
+        },
+        "SubnetGroupName": {
+            "description": "The name of the subnet group to be used for the cluster.",
+            "type": "string"
+        },
+        "SecurityGroupIds": {
+            "description": "One or more Amazon VPC security groups associated with this replication group.",
+            "type": "array",
+            "uniqueItems": false,
+            "items": {
+                "type": "string"
+            }
+        },
+        "MaintenanceWindow": {
+            "description": "Specifies the weekly time range during which maintenance on the cluster is performed. It is specified as a range in the format ddd:hh24:mi-ddd:hh24:mi (24H Clock UTC). The minimum maintenance window is a 60 minute period. ",
+            "type": "string"
+        },
+        "Port": {
+            "description": "The port number on which each member of the cluster accepts connections.",
+            "type": "integer"
+        },
+        "SnsTopicArn": {
+            "description": "The Amazon Resource Name (ARN) of the Amazon Simple Notification Service (SNS) topic to which notifications are sent. ",
+            "type": "string"
+        },
+        "TLSEnabled": {
+            "description": "A flag that enables in-transit encryption when set to true.\n\nYou cannot modify the value of TransitEncryptionEnabled after the cluster is created. To enable in-transit encryption on a cluster you must set TransitEncryptionEnabled to true when you create a cluster. ",
+            "type": "boolean"
+        },
+        "ARN": {
+            "description": "The Amazon Resource Name (ARN) of the cluster",
+            "type": "string"
+        },
+        "EngineVersion": {
+            "description": "The engine version of the cluster",
+            "type": "string"
+        },
+        "ClusterEndpoint": {
+            "description": "The cluster endpoint of the cluster",
+            "$ref": "#/definitions/Endpoint"
+        },
+        "AvailabilityMode": {
+            "description": "The availability mode of the cluster",
+            "type": "string"
+        },
+        "Shards": {
+            "description": "The shards of the cluster",
+            "type": "array",
+            "uniqueItems": false,
+            "items": {
+                "$ref": "#/definitions/Shard"
+            }
+        }
+    },
+    "additionalProperties": false,
+    "readOnlyProperties": [
+        "/properties/Status",
+        "/properties/Shards",
+        "/properties/AvailabilityMode",
+        "/properties/ClusterEndpoint",
+        "/properties/EngineVersion",
+        "/properties/ARN"
+    ],
+    "required": [
+        "Name",
+        "NodeType"
+    ],
+    "createOnlyProperties": [
+        "/properties/Name"
+    ],
+    "primaryIdentifier": [
+        "/properties/Name"
+    ],
+    "handlers": {
+        "create": {
+            "permissions": [
+                "cornerstone:CreateCluster",
+                "cornerstone:DescribeClusters"
+            ]
+        },
+        "read": {
+            "permissions": [
+                "cornerstone:DescribeClusters"
+            ]
+        },
+        "update": {
+            "permissions": [
+                "cornerstone:UpdateCluster",
+                "cornerstone:FailoverShard",
+                "cornerstone:DescribeClusters"
+            ]
+        },
+        "delete": {
+            "permissions": [
+                "cornerstone:DeleteCluster",
+                "cornerstone:DescribeClusters"
+            ]
+        },
+        "list": {
+            "permissions": [
+                "cornerstone:DescribeClusters"
+            ]
+        }
+    }
+}

@@ -1,0 +1,24 @@
+{
+    "typeName": "AWS::Cornerstone::Cluster",
+    "language": "java",
+    "runtime": "java8",
+    "entrypoint": "software.amazon.cornerstone.cluster.HandlerWrapper::handleRequest",
+    "testEntrypoint": "software.amazon.cornerstone.cluster.HandlerWrapper::testEntrypoint",
+    "settings": {
+        "version": false,
+        "subparser_name": null,
+        "verbose": 0,
+        "force": false,
+        "type_name": null,
+        "artifact_type": null,
+        "namespace": [
+            "software",
+            "amazon",
+            "cornerstone",
+            "cluster"
+        ],
+        "codegen_template_path": "guided_aws",
+        "protocolVersion": "2.0.0"
+    },
+    "executableEntrypoint": "software.amazon.cornerstone.cluster.HandlerWrapperExecutable"
+}
