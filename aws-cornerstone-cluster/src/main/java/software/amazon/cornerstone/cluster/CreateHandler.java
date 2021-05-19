@@ -5,8 +5,13 @@ import org.apache.commons.lang3.Validate;
 
 import software.amazon.awssdk.services.cornerstone.CornerstoneClient;
 import software.amazon.awssdk.services.cornerstone.model.ClusterAlreadyExistsException;
+import software.amazon.awssdk.services.cornerstone.model.InvalidParameterCombinationException;
+import software.amazon.awssdk.services.cornerstone.model.InvalidParameterValueException;
+import software.amazon.awssdk.services.cornerstone.model.SubnetGroupNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -48,6 +53,12 @@ public class CreateHandler extends BaseHandlerStd {
                             return cornerstoneClientProxyClient.injectCredentialsAndInvokeV2(awsRequest, cornerstoneClientProxyClient.client()::createCluster);
                         } catch (final ClusterAlreadyExistsException e) {
                             throw new CfnAlreadyExistsException(e);
+                        } catch (final InvalidParameterValueException | InvalidParameterCombinationException e) {
+                            throw new CfnInvalidRequestException(e);
+                        } catch (final SubnetGroupNotFoundException e) {
+                            throw new CfnNotFoundException(e);
+                        } catch (final Exception e) {
+                            throw new CfnGeneralServiceException(e);
                         }
                     }).progress();
     }

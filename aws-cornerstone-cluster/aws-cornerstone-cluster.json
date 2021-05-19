@@ -103,6 +103,7 @@
             "description": "One or more Amazon VPC security groups associated with this replication group.",
             "type": "array",
             "uniqueItems": false,
+            "insertionOrder": false,
             "items": {
                 "type": "string"
             }
