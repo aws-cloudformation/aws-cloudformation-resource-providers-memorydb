@@ -1,6 +1,6 @@
-## aws-cloudformation-resource-providers-cornerstone
+## aws-cloudformation-resource-providers-memorydb
 
-The CloudFormation Resource Provider Package For Amazon Cornerstone
+The CloudFormation Resource Provider Package For Amazon MemoryDB
 
 ## License
 
