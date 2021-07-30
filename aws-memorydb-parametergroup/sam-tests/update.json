@@ -1,0 +1,28 @@
+{
+    "action": "UPDATE",
+    "request": {
+        "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
+        "previousResourceState": {
+            "Parameters": {
+                "maxmemory-policy": "noeviction"
+            }
+        },
+        "desiredResourceState": {
+            "Name": "memdb-cfn-tst-pgrp-1",
+            "Parameters": {
+                "maxmemory-policy": "volatile-random",
+                "proto-max-bulk-len": "1048576"
+            }
+        },
+        "previousResourceTags": {
+            "resource": "parameter-group",
+            "service": "memorydb"
+        },
+        "desiredResourceTags": {
+            "service": "MemoryDb",
+            "servicehandler": "update"
+        },
+        "logicalResourceIdentifier": "MyResource"
+    },
+    "callbackContext": null
+}

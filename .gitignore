@@ -2,3 +2,23 @@
 aws-memorydb-cluter/target
 aws-memorydb-cluter/.idea
 aws-memorydb-cluter/rpdk.log
+aws-memorydb-parametergroup/target
+
+# macOS
+.DS_Store
+._*
+
+# Maven outputs
+.classpath
+
+# IntelliJ
+*.iml
+.idea
+.settings
+.project
+
+# auto-generated files
+target/
+
+# our logs
+rpdk.log*
