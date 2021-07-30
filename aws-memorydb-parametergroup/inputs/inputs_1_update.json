@@ -1,0 +1,17 @@
+{
+    "Name": "cfncontractcparametergroup1",
+    "Parameters": {
+        "maxmemory-policy": "volatile-random",
+        "proto-max-bulk-len": "1048576"
+    },
+    "Tags": [
+        {
+            "Key": "k1",
+            "Value": "v1"
+        },
+        {
+            "Key": "service",
+            "Value": "memorydb"
+        }
+    ]
+}
