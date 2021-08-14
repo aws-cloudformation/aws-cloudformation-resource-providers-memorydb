@@ -1,9 +1,9 @@
 {
-  "Name": "cfncontractcluster1",
+  "Name": "cfncontractcluster2",
   "NodeType": "db.r6g.large",
   "NumShards": 1,
   "Description": "memdb cfn test cluster updated",
-  "MaintenanceWindow": "sat:06:30-sat:07:30",
+  "MaintenanceWindow": "sat:04:30-sat:05:30",
   "SnapshotWindow": "09:30-11:30",
   "SnapshotRetentionLimit": 2,
   "Tags": [

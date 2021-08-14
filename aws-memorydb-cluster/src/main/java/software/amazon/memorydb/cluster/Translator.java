@@ -48,8 +48,6 @@ public class Translator {
         return (desiredValue != null && !desiredValue.equals(currentValue));
     }
 
-
-
     static CreateClusterRequest translateToCreateRequest(final ResourceModel model, Map<String, String> tags) {
         return CreateClusterRequest.builder()
                 .clusterName(model.getName())
@@ -113,8 +111,8 @@ public class Translator {
         return DescribeClustersRequest.builder().clusterName(model.getName()).showShardDetails(true).build();
     }
 
-    static ListTagsRequest translateToListTagsRequest(final Cluster cluster) {
-        return translateToListTagsRequest(cluster.arn());
+    static ListTagsRequest translateToListTagsRequest(final ResourceModel model) {
+        return translateToListTagsRequest(model.getARN());
     }
 
     static ListTagsRequest translateToListTagsRequest(final String arn) {
@@ -179,41 +177,33 @@ public class Translator {
     static ResourceModel translateFromReadResponse(Cluster cluster) {
         final int replicaCount = cluster.shards().stream().mapToInt(software.amazon.awssdk.services.memorydb.model.Shard::numberOfNodes).min().orElse(1) - 1;
         final List<String> securityGroupIds = cluster.securityGroups().stream().map(SecurityGroupMembership::securityGroupId).collect(Collectors.toList());
-        final List<Shard> shards = translateShards(cluster);
-
-        return ResourceModel.builder().name(cluster.name()).description(cluster.description()).status(cluster.status()).nodeType(cluster.nodeType())
-                            .numShards(cluster.numberOfShards()).numReplicasPerShard(replicaCount).subnetGroupName(cluster.subnetGroupName())
-                            .securityGroupIds(securityGroupIds).port(cluster.clusterEndpoint().port()).snsTopicArn(cluster.snsTopicArn())
-                            .tLSEnabled(cluster.tlsEnabled()).aRN(cluster.arn())
-                            .engineVersion(cluster.engineVersion())
-                            .enginePatchVersion(cluster.enginePatchVersion())
-                            .parameterGroupName(cluster.parameterGroupName())
-                            .parameterGroupStatus(cluster.parameterGroupStatus())
-                            .autoMinorVersionUpgrade(cluster.autoMinorVersionUpgrade())
-                            .maintenanceWindow(cluster.maintenanceWindow()).snapshotWindow(cluster.snapshotWindow()).snapshotRetentionLimit(cluster.snapshotRetentionLimit())
-                            .aCLName(cluster.aclName())
-                            .snsTopicStatus(cluster.snsTopicStatus())
-                            .clusterEndpoint(translateEndpoint(cluster)).availabilityMode(cluster.availabilityModeAsString()).shards(shards).build();
-    }
-
-    static List<Shard> translateShards(final Cluster cluster) {
-        return cluster.shards().stream().map(Translator::translateShard).collect(Collectors.toList());
+        return ResourceModel.builder()
+                .name(cluster.name())
+                .description(cluster.description())
+                .status(cluster.status())
+                .nodeType(cluster.nodeType())
+                .numShards(cluster.numberOfShards())
+                .numReplicasPerShard(replicaCount)
+                .subnetGroupName(cluster.subnetGroupName())
+                .securityGroupIds(securityGroupIds)
+                .port(cluster.clusterEndpoint().port())
+                .snsTopicArn(cluster.snsTopicArn())
+                .tLSEnabled(cluster.tlsEnabled())
+                .aRN(cluster.arn())
+                .engineVersion(cluster.engineVersion())
+                .parameterGroupName(cluster.parameterGroupName())
+                .parameterGroupStatus(cluster.parameterGroupStatus())
+                .autoMinorVersionUpgrade(cluster.autoMinorVersionUpgrade())
+                .maintenanceWindow(cluster.maintenanceWindow())
+                .snapshotWindow(cluster.snapshotWindow())
+                .snapshotRetentionLimit(cluster.snapshotRetentionLimit())
+                .aCLName(cluster.aclName())
+                .snsTopicStatus(cluster.snsTopicStatus())
+                .clusterEndpoint(translateEndpoint(cluster)).build();
     }
 
     static Endpoint translateEndpoint(final Cluster cluster) {
         return Endpoint.builder().address(cluster.clusterEndpoint().address()).port(cluster.clusterEndpoint().port()).build();
-    }
-
-    static Shard translateShard(final software.amazon.awssdk.services.memorydb.model.Shard shard) {
-        final List<Node> nodes = shard.nodes().stream().map(Translator::translateNode).collect(Collectors.toList());
-        return Shard.builder().name(shard.name()).status(shard.status()).slots(shard.slots()).numNodes(shard.numberOfNodes()).nodes(nodes).build();
-    }
-
-    private static Node translateNode(final software.amazon.awssdk.services.memorydb.model.Node node) {
-        Instant instant = node.createTime();
-        return Node.builder().name(node.name()).status(node.status()).availabilityZone(node.availabilityZone())
-                .createTime(instant != null ? instant.toString() : null)
-                .build();
     }
 
     static DeleteClusterRequest translateToDeleteRequest(final ResourceModel model) {
@@ -246,5 +236,12 @@ public class Translator {
 
     private static <T> Stream<T> streamOfOrEmpty(final Collection<T> collection) {
         return Optional.ofNullable(collection).map(Collection::stream).orElseGet(Stream::empty);
+    }
+
+    static Set<software.amazon.memorydb.cluster.Tag> translateTags(final Collection<Tag> tags) {
+        return Optional.ofNullable(tags).orElse(Collections.emptySet())
+                .stream()
+                .map(tag -> software.amazon.memorydb.cluster.Tag.builder().key(tag.key()).value(tag.value()).build())
+                .collect(Collectors.toSet());
     }
 }

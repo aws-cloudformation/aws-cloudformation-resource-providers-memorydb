@@ -162,7 +162,7 @@ public class AbstractTestBase {
                 .numberOfShards(model.getNumShards()).subnetGroupName(model.getSubnetGroupName()).securityGroups(getSecurityGroupMemberships(model.getSecurityGroupIds()))
                 .snsTopicArn(model.getSnsTopicArn()).snsTopicStatus(model.getSnsTopicStatus()).tlsEnabled(model.getTLSEnabled()).arn(model.getARN()).engineVersion(model.getEngineVersion())
                 .clusterEndpoint(software.amazon.awssdk.services.memorydb.model.Endpoint.builder().address(model.getClusterEndpoint().getAddress()).port(model.getClusterEndpoint().getPort()).build())
-                .availabilityMode(model.getAvailabilityMode()).shards(getShards(model.getNumShards(), model.getNumReplicasPerShard())).parameterGroupName(model.getParameterGroupName()).parameterGroupStatus(model.getParameterGroupStatus())
+                .shards(getShards(model.getNumShards(), model.getNumReplicasPerShard())).parameterGroupName(model.getParameterGroupName()).parameterGroupStatus(model.getParameterGroupStatus())
                 .status(model.getStatus())
                 .build();
     }
@@ -197,8 +197,6 @@ public class AbstractTestBase {
                 .engineVersion(cluster.engineVersion())
                 .aCLName(cluster.aclName())
                 .clusterEndpoint(Translator.translateEndpoint(cluster))
-                .availabilityMode(cluster.availabilityModeAsString())
-                .shards(Translator.translateShards(cluster))
                 .snapshotRetentionLimit(cluster.snapshotRetentionLimit())
                 .snapshotWindow(cluster.snapshotWindow());
         return builder.build();

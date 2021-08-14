@@ -37,30 +37,11 @@ public class DeleteHandler extends BaseHandlerStd {
 
         return proxy.initiate("AWS-memorydb-Cluster::Delete", proxyClient, request.getDesiredResourceState(), progress.getCallbackContext())
                     .translateToServiceRequest(Translator::translateToDeleteRequest).backoffDelay(STABILIZATION_DELAY)
-                .makeServiceCall((awsRequest, client) -> {
-                    try {
-                        return client.injectCredentialsAndInvokeV2(awsRequest, client.client()::deleteCluster);
-                    } catch (final ClusterNotFoundException e) {
-                        throw new CfnNotFoundException(e);
-                    } catch (final InvalidParameterValueException | InvalidParameterCombinationException | InvalidClusterStateException e)
-                    {
-                        throw new CfnInvalidRequestException(e);
-                    } catch (final SnapshotAlreadyExistsException e) {
-                        throw new CfnAlreadyExistsException(e);
-                    }
-                    catch (final Exception e) {
-                        throw new CfnGeneralServiceException(e);
-                    }
-                })                    .stabilize((awsRequest, awsResponse, client, model, context) -> isDeleted(proxyClient, model))
-                    .done(this::setResourceModelToNullAndReturnSuccess);
-    }
-
-    private ProgressEvent<ResourceModel, CallbackContext> setResourceModelToNullAndReturnSuccess(final DeleteClusterRequest deleteDataSourceRequest,
-                                                                                                 final DeleteClusterResponse deleteDataSourceResponse,
-                                                                                                 final ProxyClient<MemoryDbClient> proxyClient,
-                                                                                                 final ResourceModel resourceModel,
-                                                                                                 final CallbackContext callbackContext) {
-        return ProgressEvent.defaultSuccessHandler(null);
+                .makeServiceCall((awsRequest, client) -> handleExceptions(() ->
+                        client.injectCredentialsAndInvokeV2(awsRequest, client.client()::deleteCluster)))
+                .stabilize((awsRequest, awsResponse, client, model, context) -> isDeleted(proxyClient, model))
+                .done((deleteClusterRequest, deleteClusterResponse, proxyInvocation, model, context) -> ProgressEvent
+                        .defaultSuccessHandler(null));
     }
 
     private Boolean isDeleted(final ProxyClient<MemoryDbClient> proxyClient,
@@ -70,6 +51,8 @@ public class DeleteHandler extends BaseHandlerStd {
             return false;
         } catch (ClusterNotFoundException e) {
             return true;
+        } catch (Exception e) {
+            throw new CfnGeneralServiceException(e);
         }
     }
 }

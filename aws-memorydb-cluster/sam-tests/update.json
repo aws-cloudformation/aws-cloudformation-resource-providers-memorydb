@@ -16,25 +16,6 @@
       "Status": "available",
       "Description": "memdb cfn test cluster",
       "NumberOfShards": 1,
-      "Shards": [
-        {
-          "Name": "0001",
-          "Status": "available",
-          "Slots": "0-16383",
-          "Nodes": [
-            {
-              "Name": "memdb-cfn-tst-clstr-0001-001",
-              "AvailabilityZone": "us-east-1e"
-            },
-            {
-              "Name": "memdb-cfn-tst-clstr-0001-002",
-              "AvailabilityZone": "us-east-1c"
-            }
-          ],
-          "NumberOfNodes": 2
-        }
-      ],
-      "AvailabilityMode": "SingleAZ",
       "ClusterEndpoint": {
         "Address": "memdb-cfn-tst-clstr.cg6t24.clustercfg.memorydb-qa.us-east-1.amazonaws.com",
         "Port": 6379

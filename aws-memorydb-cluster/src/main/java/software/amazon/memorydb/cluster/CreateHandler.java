@@ -1,17 +1,9 @@
 package software.amazon.memorydb.cluster;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
-import software.amazon.awssdk.services.memorydb.model.ClusterAlreadyExistsException;
-import software.amazon.awssdk.services.memorydb.model.InvalidParameterCombinationException;
-import software.amazon.awssdk.services.memorydb.model.InvalidParameterValueException;
-import software.amazon.awssdk.services.memorydb.model.SubnetGroupNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -23,8 +15,11 @@ import java.util.Map;
 
 public class CreateHandler extends BaseHandlerStd {
 
+    static final String NAME_REQUIRED_FOR_CLUSTER = "Name is required for cluster creation";
     static final String NODE_TYPE_REQUIRED_FOR_CLUSTER = "Node type is required for cluster creation";
-    static final String SUBNET_GROUP_REQUIRED = "Subnet group is required for cluster creation";
+    static final String ACL_NAME_REQUIRED_FOR_CLUSTER = "ACL name is required for cluster creation";
+    public static final String ID_WRONG_FORMAT = "Name must begin with a letter; must contain only lowercase ASCII "
+            + "letters, digits, and hyphens; and must not end with a hyphen or contain two consecutive hyphens.";
 
     protected ProgressEvent<ResourceModel, CallbackContext> handleRequest(final AmazonWebServicesClientProxy proxy,
                                                                           final ResourceHandlerRequest<ResourceModel> request,
@@ -34,14 +29,24 @@ public class CreateHandler extends BaseHandlerStd {
         final ResourceModel desiredResourceState = request.getDesiredResourceState();
 
         try {
+
+            logger.log(String.format("Resource model: %s", desiredResourceState.toString()));
+            Validate.isTrue(desiredResourceState.getName() != null, NAME_REQUIRED_FOR_CLUSTER);
             Validate.isTrue(desiredResourceState.getNodeType() != null, NODE_TYPE_REQUIRED_FOR_CLUSTER);
-            Validate.isTrue(StringUtils.isNotEmpty(desiredResourceState.getSubnetGroupName()), SUBNET_GROUP_REQUIRED);
+            Validate.isTrue(desiredResourceState.getACLName() != null, ACL_NAME_REQUIRED_FOR_CLUSTER);
+
+            if (!desiredResourceState.getName().matches("[a-z][a-z0-9\\\\-]*")) {
+                throw new CfnInvalidRequestException(ID_WRONG_FORMAT);
+            }
+
+
         } catch (Exception e) {
             throw new CfnInvalidRequestException(e.getMessage());
         }
 
+
         return ProgressEvent.progress(desiredResourceState, callbackContext).then(progress -> createCluster(proxy, proxyClient, progress, request.getDesiredResourceTags()))
-                .then(progress -> waitForClusterAvailableStatus(proxy, proxyClient, progress, logger))
+                .then(progress -> waitForClusterAvailableStatus(proxy, proxyClient, progress))
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
 
@@ -52,19 +57,9 @@ public class CreateHandler extends BaseHandlerStd {
         return proxy.initiate("AWS-memorydb-Cluster::Create", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                 .translateToServiceRequest((resourceModel) -> Translator.translateToCreateRequest(resourceModel, tags))
                 .backoffDelay(STABILIZATION_DELAY)
-                .makeServiceCall((awsRequest, memorydbClientProxyClient) -> {
-                    try {
-                        return memorydbClientProxyClient.injectCredentialsAndInvokeV2(awsRequest, memorydbClientProxyClient.client()::createCluster);
-                    } catch (final ClusterAlreadyExistsException e) {
-                        throw new CfnAlreadyExistsException(e);
-                    } catch (final InvalidParameterValueException | InvalidParameterCombinationException e) {
-                        throw new CfnInvalidRequestException(e);
-                    } catch (final SubnetGroupNotFoundException e) {
-                        throw new CfnNotFoundException(e);
-                    } catch (final Exception e) {
-                        throw new CfnGeneralServiceException(e);
-                    }
-                }).progress();
+                .makeServiceCall((awsRequest, memorydbClientProxyClient) -> handleExceptions(() ->
+                        memorydbClientProxyClient.injectCredentialsAndInvokeV2(awsRequest, memorydbClientProxyClient.client()::createCluster)))
+                .progress();
     }
 
 }

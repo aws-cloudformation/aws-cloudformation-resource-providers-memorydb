@@ -75,7 +75,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
     @AfterEach
     public void tear_down() {
-        verify(sdkClient, atLeastOnce()).serviceName();
         verifyNoMoreInteractions(sdkClient);
     }
 
@@ -104,7 +103,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
         verify(proxyClient.client()).describeClusters(any(DescribeClustersRequest.class));
-        verify(proxyClient.client(), times(2)).listTags(any(ListTagsRequest.class));
+        verify(proxyClient.client(), times(1)).listTags(any(ListTagsRequest.class));
+        verify(sdkClient, atLeastOnce()).serviceName();
     }
 
 
@@ -164,6 +164,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
     public void handleRequest_UpdateClusterUpdateTags(){
         final ResourceModel previousTestResourceModel = getDesiredTestResourceModel();
         final ResourceModel desiredTestResourceModel = getDesiredTestResourceModel();
+        desiredTestResourceModel.setARN("clusterArn");
         final ResourceHandlerRequest<ResourceModel> request =
                 buildRequest(desiredTestResourceModel, previousTestResourceModel);
         Set<Tag> newTags = Sets.newSet(Tag.builder().key("key").value("newValue").build(),
@@ -174,10 +175,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
         request.setPreviousResourceTags(translateTagsToMap(oldTags));
         request.setDesiredResourceTags(translateTagsToMap(newTags));
         request.getDesiredResourceState().setTags(newTags);
-
-        final DescribeClustersResponse describeClustersResponse = DescribeClustersResponse.builder()
-                .clusters(getTestCluster()).build();
-        when(sdkClient.describeClusters(any(DescribeClustersRequest.class))).thenReturn(describeClustersResponse);
         final ListTagsResponse listTagsResponse = ListTagsResponse.builder()
                 .tagList(translateTagsToSdk(oldTags)).build();
         when(proxyClient.client().listTags(any(ListTagsRequest.class))).thenReturn(listTagsResponse);
@@ -196,12 +193,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(response.getNextToken()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-
-        verify(proxyClient.client()).describeClusters(any(DescribeClustersRequest.class));
         verify(proxyClient.client()).listTags(any(ListTagsRequest.class));
         verify(proxyClient.client()).untagResource(any(UntagResourceRequest.class));
         verify(proxyClient.client()).tagResource(any(TagResourceRequest.class));
-        verify(sdkClient, atLeastOnce()).serviceName();
     }
 
 

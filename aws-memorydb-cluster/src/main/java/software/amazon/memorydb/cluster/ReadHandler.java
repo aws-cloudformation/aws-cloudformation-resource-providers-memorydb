@@ -1,5 +1,6 @@
 package software.amazon.memorydb.cluster;
 
+import org.apache.commons.collections.CollectionUtils;
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
 import software.amazon.awssdk.services.memorydb.model.ClusterNotFoundException;
 import software.amazon.awssdk.services.memorydb.model.DescribeClustersResponse;
@@ -12,6 +13,7 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,37 +24,48 @@ public class ReadHandler extends BaseHandlerStd {
                                                                           final CallbackContext callbackContext,
                                                                           final ProxyClient<MemoryDbClient> proxyClient,
                                                                           final Logger logger) {
-        return describeClusters(proxy, proxyClient, request.getDesiredResourceState(), callbackContext)
-                .done(awsResponse -> {
-                    ResourceModel respModel = Translator.translateFromReadResponse(awsResponse);
-                    Set<Tag> tags = getTags(proxy, proxyClient, awsResponse);
-                    if (tags != null) {
-                        respModel.setTags(tags);
-                    }
-                    return ProgressEvent.defaultSuccessHandler(respModel);
-                });
+        return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
+                .then(progress -> describeClusters(proxy, progress, proxyClient))
+                .then(progress -> listTags(proxy, progress, proxyClient))
+                .then(progress -> ProgressEvent.defaultSuccessHandler(progress.getResourceModel()));
 
     }
 
-    public Set<Tag> getTags(final AmazonWebServicesClientProxy proxy,
-                            final ProxyClient<MemoryDbClient> client,
-                            final DescribeClustersResponse readResponse) {
-        try {
-            final ListTagsResponse response =
-                    proxy.injectCredentialsAndInvokeV2(Translator.translateToListTagsRequest(readResponse.clusters().get(0)), client.client()::listTags);
-            return response.tagList() != null && !response.tagList().isEmpty() ? response
-                    .tagList()
-                    .stream()
-                    .map(tag -> Tag.builder()
-                            .key(tag.key())
-                            .value(tag.value())
-                            .build())
-                    .collect(Collectors.toSet())
-                    : null;
-        } catch (ClusterNotFoundException e) {
-            throw new CfnNotFoundException(ResourceModel.TYPE_NAME, e.getMessage());
-        } catch (Exception e) {
-            throw new CfnServiceInternalErrorException(e);
+    private ProgressEvent<ResourceModel, CallbackContext> describeClusters(
+            AmazonWebServicesClientProxy proxy,
+            ProgressEvent<ResourceModel, CallbackContext> progress,
+            ProxyClient<MemoryDbClient> proxyClient
+    ) {
+        return proxy
+                .initiate("AWS-MemoryDB-Cluster::Describe", proxyClient, progress.getResourceModel(),
+                        progress.getCallbackContext())
+                .translateToServiceRequest(Translator::translateToReadRequest)
+                .makeServiceCall((awsRequest, client) -> handleExceptions(() ->
+                        client.injectCredentialsAndInvokeV2(awsRequest, client.client()::describeClusters)))
+                .done((describeUserRequest, describeClustersResponse, proxyInvocation, resourceModel, context) ->
+                        ProgressEvent.progress(Translator.translateFromReadResponse(describeClustersResponse), context));
+    }
+
+    private ProgressEvent<ResourceModel, CallbackContext> listTags(
+            AmazonWebServicesClientProxy proxy,
+            ProgressEvent<ResourceModel, CallbackContext> progress,
+            ProxyClient<MemoryDbClient> proxyClient
+    ) {
+
+        if(!isArnPresent(progress.getResourceModel())) {
+            return progress;
         }
+
+        return proxy
+                .initiate("AWS-MemoryDB-Cluster::ListTags", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
+                .translateToServiceRequest(Translator::translateToListTagsRequest)
+                .makeServiceCall((awsRequest, client) -> handleExceptions(() -> client.injectCredentialsAndInvokeV2(awsRequest, client.client()::listTags)))
+                .done( (listTagsRequest, listTagsResponse, proxyInvocation, resourceModel, context) -> {
+                            if(CollectionUtils.isNotEmpty(listTagsResponse.tagList())) {
+                                resourceModel.setTags(Translator.translateTags(listTagsResponse.tagList()));
+                            }
+                            return ProgressEvent.progress(resourceModel, context);
+                        }
+                );
     }
 }

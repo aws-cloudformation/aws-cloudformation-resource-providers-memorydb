@@ -1,9 +1,11 @@
 package software.amazon.memorydb.cluster;
 
+import static junit.framework.Assert.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -24,6 +26,9 @@ import software.amazon.awssdk.services.memorydb.model.DeleteClusterRequest;
 import software.amazon.awssdk.services.memorydb.model.DeleteClusterResponse;
 import software.amazon.awssdk.services.memorydb.model.DescribeClustersRequest;
 import software.amazon.awssdk.services.memorydb.model.DescribeClustersResponse;
+import software.amazon.awssdk.services.memorydb.model.SnapshotAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -80,5 +85,42 @@ public class DeleteHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
+    }
+
+    @Test
+    public void handleRequest_FailedWithResourceNotFound() {
+        final DeleteHandler handler = new DeleteHandler();
+        final ResourceModel desiredTestResourceModel = getDesiredTestResourceModel();
+        final ResourceHandlerRequest<ResourceModel> request =
+                ResourceHandlerRequest.<ResourceModel>builder().desiredResourceState(desiredTestResourceModel).build();
+
+        doThrow(ClusterNotFoundException.class).when(proxyClient.client()).deleteCluster(any(DeleteClusterRequest.class));
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+            fail("Expected CfnNotFoundException");
+        } catch (CfnNotFoundException e) {
+            //expected
+            assertThat(e.getCause() instanceof ClusterNotFoundException).isTrue();
+        }
+    }
+
+    @Test
+    public void handleRequest_FailedWithResourceAlreadyExists() {
+        final DeleteHandler handler = new DeleteHandler();
+        final ResourceModel desiredTestResourceModel = getDesiredTestResourceModel();
+        desiredTestResourceModel.setFinalSnapshotName("final-snapshot");
+        final ResourceHandlerRequest<ResourceModel> request =
+                ResourceHandlerRequest.<ResourceModel>builder().desiredResourceState(desiredTestResourceModel).build();
+
+        doThrow(SnapshotAlreadyExistsException.class).when(proxyClient.client()).deleteCluster(any(DeleteClusterRequest.class));
+
+        try {
+            handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+            fail("Expected CfnAlreadyExistsException");
+        } catch (CfnAlreadyExistsException e) {
+            //expected
+            assertThat(e.getCause() instanceof SnapshotAlreadyExistsException).isTrue();
+        }
     }
 }

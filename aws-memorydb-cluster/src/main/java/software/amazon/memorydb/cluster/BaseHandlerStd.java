@@ -1,5 +1,6 @@
 package software.amazon.memorydb.cluster;
 
+import java.security.InvalidParameterException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Objects;
@@ -8,11 +9,25 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
+import software.amazon.awssdk.services.memorydb.model.AclNotFoundException;
 import software.amazon.awssdk.services.memorydb.model.Cluster;
+import software.amazon.awssdk.services.memorydb.model.ClusterAlreadyExistsException;
 import software.amazon.awssdk.services.memorydb.model.ClusterNotFoundException;
 import software.amazon.awssdk.services.memorydb.model.DescribeClustersRequest;
 import software.amazon.awssdk.services.memorydb.model.DescribeClustersResponse;
+import software.amazon.awssdk.services.memorydb.model.InvalidClusterStateException;
+import software.amazon.awssdk.services.memorydb.model.InvalidNodeStateException;
+import software.amazon.awssdk.services.memorydb.model.InvalidParameterCombinationException;
+import software.amazon.awssdk.services.memorydb.model.InvalidParameterValueException;
+import software.amazon.awssdk.services.memorydb.model.ParameterGroupNotFoundException;
+import software.amazon.awssdk.services.memorydb.model.SnapshotAlreadyExistsException;
+import software.amazon.awssdk.services.memorydb.model.SubnetGroupNotFoundException;
+import software.amazon.cloudformation.exceptions.BaseHandlerException;
+import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
+import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
+import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
@@ -23,8 +38,6 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import software.amazon.cloudformation.proxy.delay.Constant;
-
-// Placeholder for the functionality that could be shared across Create/Read/Update/Delete/List Handlers
 
 public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     protected static final String UPDATE_FAILED_WITH_STABILIZATION_SUCCESS =
@@ -64,21 +77,21 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
 
     protected ProgressEvent<ResourceModel, CallbackContext> waitForClusterAvailableStatus(final AmazonWebServicesClientProxy proxy,
                                                                                           final ProxyClient<MemoryDbClient> proxyClient,
-                                                                                          final ProgressEvent<ResourceModel, CallbackContext> progress,
-                                                                                          final Logger logger) {
+                                                                                          final ProgressEvent<ResourceModel, CallbackContext> progress) {
 
         return proxy.initiate("AWS-MemoryDB-Cluster::stabilizeCluster", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                     .translateToServiceRequest(Function.identity()).backoffDelay(STABILIZATION_DELAY).makeServiceCall(EMPTY_CALL)
-                    .stabilize((resourceModel, response, client, model, callbackContext) -> isStabilized(proxy, client, model, logger)).progress();
+                    .stabilize((resourceModel, response, client, model, callbackContext) -> isStabilized(proxy, client, model)).progress();
     }
 
     protected Boolean isStabilized(final AmazonWebServicesClientProxy proxy,
                                    final ProxyClient<MemoryDbClient> client,
-                                   final ResourceModel model,
-                                   final Logger logger) {
+                                   final ResourceModel model) {
         try {
             final Cluster cluster = getCluster(proxy, client, model);
             return STABILIZED_STATUS.equalsIgnoreCase(cluster.status());
+        } catch (ClusterNotFoundException e) {
+            throw new CfnNotFoundException(ResourceModel.TYPE_NAME, e.getMessage());
         } catch (Exception e) {
             throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, model.getName(), e);
         }
@@ -115,12 +128,28 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                                                            final CallbackContext callbackContext) {
         return proxy.initiate("AWS-MemoryDB-Cluster::Read", proxyClient, model, callbackContext)
                 .translateToServiceRequest(Translator::translateToReadRequest)
-                .makeServiceCall((awsRequest, client) -> {
-                    try {
-                        return client.injectCredentialsAndInvokeV2(awsRequest, client.client()::describeClusters);
-                    } catch (final ClusterNotFoundException e) {
-                        throw new CfnNotFoundException(e);
-                    }
-                });
+                .makeServiceCall((awsRequest, client) -> handleExceptions(() -> client.injectCredentialsAndInvokeV2(awsRequest, client.client()::describeClusters)));
+    }
+
+    protected <T> T handleExceptions(Supplier<T> call) {
+        try {
+            return call.get();
+        } catch (final InvalidParameterException | InvalidParameterValueException  | InvalidParameterCombinationException e) {
+            throw new CfnInvalidRequestException(e);
+        } catch (final ClusterAlreadyExistsException | SnapshotAlreadyExistsException e) {
+            throw new CfnAlreadyExistsException(e);
+        } catch (final ClusterNotFoundException | SubnetGroupNotFoundException | ParameterGroupNotFoundException | AclNotFoundException e) {
+            throw new CfnNotFoundException(e);
+        } catch (final InvalidClusterStateException | InvalidNodeStateException e) {
+            throw new CfnNotStabilizedException(e);
+        } catch (final BaseHandlerException e) {
+            throw e;
+        } catch (final Exception e) {
+            throw new CfnGeneralServiceException(e);
+        }
+    }
+
+    protected boolean isArnPresent(ResourceModel model) {
+        return model.getARN() != null && !model.getARN().isEmpty();
     }
 }

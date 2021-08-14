@@ -11,7 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.amazon.memorydb.cluster.CreateHandler.NODE_TYPE_REQUIRED_FOR_CLUSTER;
-import static software.amazon.memorydb.cluster.CreateHandler.SUBNET_GROUP_REQUIRED;
+import static software.amazon.memorydb.cluster.CreateHandler.ACL_NAME_REQUIRED_FOR_CLUSTER;
 
 import java.time.Duration;
 
@@ -135,9 +135,9 @@ public class CreateHandlerTest extends AbstractTestBase {
     }
 
     @Test
-    public void handleRequest_Failure_SubnetGroupMissing() {
+    public void handleRequest_Failure_ACLNameMissing() {
         final ResourceModel desiredTestResourceModel = getDesiredTestResourceModel();
-        desiredTestResourceModel.setSubnetGroupName(null);
+        desiredTestResourceModel.setACLName(null);
 
         final ResourceHandlerRequest<ResourceModel> request =
                 ResourceHandlerRequest.<ResourceModel>builder().desiredResourceState(desiredTestResourceModel).build();
@@ -146,7 +146,7 @@ public class CreateHandlerTest extends AbstractTestBase {
             handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
             fail("Expected CfnInvalidRequestException");
         } catch (CfnInvalidRequestException e) {
-            assertThat(e.getMessage()).contains(SUBNET_GROUP_REQUIRED);
+            assertThat(e.getMessage()).contains(ACL_NAME_REQUIRED_FOR_CLUSTER);
         }
 
         verify(sdkClient, never()).serviceName();

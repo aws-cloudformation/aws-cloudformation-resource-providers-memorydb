@@ -3,12 +3,13 @@
   "request": {
     "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
     "desiredResourceState": {
-      "Name": "memdb-cfn-tst-clstr5",
+      "Name": "memdb-cfn-tst-clstr-10",
       "Description": "memdb cfn test cluster",
       "NodeType": "db.r6g.large",
       "NumShards": 1,
       "NumReplicasPerShard": 1,
-      "SubnetGroupName": "memorydbsubnetgroup"
+      "SubnetGroupName": "memorydbsubnetgroup",
+      "ACLName": "open-access"
     },
     "logicalResourceIdentifier": "MyResource"
   },

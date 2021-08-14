@@ -1,27 +1,19 @@
 package software.amazon.memorydb.cluster;
 
-
-
 import static software.amazon.memorydb.cluster.Translator.mapToTags;
 
 import com.google.common.collect.Sets;
+import org.apache.commons.collections.CollectionUtils;
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
 import software.amazon.awssdk.services.memorydb.model.Cluster;
 import software.amazon.awssdk.services.memorydb.model.ClusterNotFoundException;
-import software.amazon.awssdk.services.memorydb.model.DescribeClustersResponse;
 import software.amazon.awssdk.services.memorydb.model.ListTagsResponse;
 import software.amazon.awssdk.services.memorydb.model.MemoryDbException;
-import software.amazon.awssdk.services.memorydb.model.InvalidClusterStateException;
 import software.amazon.awssdk.services.memorydb.model.InvalidParameterCombinationException;
 import software.amazon.awssdk.services.memorydb.model.InvalidParameterValueException;
-import software.amazon.awssdk.services.memorydb.model.ParameterGroupNotFoundException;
-import software.amazon.cloudformation.exceptions.BaseHandlerException;
-import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
-import software.amazon.cloudformation.exceptions.CfnNotUpdatableException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -38,9 +30,8 @@ public class UpdateHandler extends BaseHandlerStd {
                                                                           final CallbackContext callbackContext,
                                                                           final ProxyClient<MemoryDbClient> proxyClient,
                                                                           final Logger logger) {
-        ProgressEvent<software.amazon.memorydb.cluster.ResourceModel,software.amazon.memorydb.cluster.CallbackContext> event;
 
-        event = ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
+        return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
                 .then(progress -> updateCluster(proxy, proxyClient, progress, request, ClusterUpdateFieldType.DESCRIPTION, logger))
                 .then(progress -> updateCluster(proxy, proxyClient, progress, request, ClusterUpdateFieldType.SECURITY_GROUP_IDS, logger))
                 .then(progress -> updateCluster(proxy, proxyClient, progress, request, ClusterUpdateFieldType.MAINTENANCE_WINDOW, logger))
@@ -56,8 +47,6 @@ public class UpdateHandler extends BaseHandlerStd {
                 .then(progress -> updateCluster(proxy, proxyClient, progress, request, ClusterUpdateFieldType.ACL_NAME, logger))
                 .then(progress -> tagResource(proxy, proxyClient, progress, request))
                 .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
-
-        return event;
     }
 
     ProgressEvent<ResourceModel, CallbackContext> updateCluster(final AmazonWebServicesClientProxy proxy,
@@ -66,33 +55,15 @@ public class UpdateHandler extends BaseHandlerStd {
                                                                 final ResourceHandlerRequest<ResourceModel> request,
                                                                 final ClusterUpdateFieldType fieldType,
                                                                 final Logger logger) {
-        try {
 
-            final ResourceModel desiredResourceState = request.getDesiredResourceState();
-            final ResourceModel currentResourceState = request.getPreviousResourceState();
+        final ResourceModel desiredResourceState = request.getDesiredResourceState();
+        final ResourceModel currentResourceState = request.getPreviousResourceState();
 
-            if (!isUpdateNeeded(desiredResourceState, currentResourceState, fieldType, logger)) {
-                return progress;
-            }
-
-            return updateCluster(proxy, proxyClient, progress, desiredResourceState, fieldType, logger);
-
-        } catch (final ClusterNotFoundException e) {
-            throw new CfnNotFoundException(e);
-        } catch (CfnNotFoundException e) {
-            throw e;
-        } catch (final InvalidParameterValueException | InvalidParameterCombinationException e) {
-            throw new CfnInvalidRequestException(e);
-        } catch (final InvalidClusterStateException e) {
-            throw new CfnNotStabilizedException(e);
-        } catch (final ParameterGroupNotFoundException e) {
-            throw new CfnNotFoundException(e);
-        } catch (final Exception e) {
-            if (e instanceof BaseHandlerException) {
-                throw e;
-            }
-            throw new CfnGeneralServiceException(e);
+        if (!isUpdateNeeded(desiredResourceState, currentResourceState, fieldType, logger)) {
+            return progress;
         }
+
+        return updateCluster(proxy, proxyClient, progress, desiredResourceState, fieldType, logger);
     }
 
 
@@ -100,6 +71,7 @@ public class UpdateHandler extends BaseHandlerStd {
                                    final Map<String, String> currentResourceTags) {
         return Translator.isModified(desiredResourceTags, currentResourceTags);
     }
+
 
     private boolean isUpdateNeeded(final ResourceModel desiredResourceState,
                                    final ResourceModel currentResourceState,
@@ -163,21 +135,8 @@ public class UpdateHandler extends BaseHandlerStd {
         return proxy.initiate("AWS-memorydb-Cluster::Update", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                 .translateToServiceRequest(model -> Translator.translateToUpdateRequest(model, fieldType))
                 .backoffDelay(STABILIZATION_DELAY)
-                .makeServiceCall((awsRequest, memoryDbClientProxyClient) -> {
-                    try {
-                        return memoryDbClientProxyClient.injectCredentialsAndInvokeV2(awsRequest, memoryDbClientProxyClient.client()::updateCluster);
-                    } catch (final ClusterNotFoundException e) {
-                        throw new CfnNotFoundException(e);
-                    } catch (final InvalidParameterValueException | InvalidParameterCombinationException e) {
-                        throw new CfnInvalidRequestException(e);
-                    } catch (final InvalidClusterStateException e) {
-                        throw new CfnNotStabilizedException(e);
-                    } catch (final ParameterGroupNotFoundException e) {
-                        throw new CfnNotFoundException(e);
-                    } catch (final Exception e) {
-                        throw e;
-                    }
-                }).stabilize((awsRequest, awsResponse, client, model, context) -> {
+                .makeServiceCall((awsRequest, memoryDbClientProxyClient) -> handleExceptions(() ->  memoryDbClientProxyClient.injectCredentialsAndInvokeV2(awsRequest, memoryDbClientProxyClient.client()::updateCluster)))
+                .stabilize((awsRequest, awsResponse, client, model, context) -> {
                     try {
                         final Cluster cluster = getCluster(proxy, client, model);
                         boolean isStabilized = STABILIZED_STATUS.contains(cluster.status());
@@ -208,38 +167,34 @@ public class UpdateHandler extends BaseHandlerStd {
                                                                         final ProxyClient<MemoryDbClient> proxyClient,
                                                                         final ProgressEvent<ResourceModel, CallbackContext> progress,
                                                                         final ResourceHandlerRequest<ResourceModel> request) {
-        if(!isUpdateNeeded(request.getDesiredResourceTags(), request.getPreviousResourceTags())) {
+        if(!isUpdateNeeded(request.getDesiredResourceTags(), request.getPreviousResourceTags()) || !isArnPresent(progress.getResourceModel())) {
             return progress;
         }
-        return describeClusters(proxy, proxyClient, progress.getResourceModel(), progress.getCallbackContext())
-                .done((paramGroupRequest, clustersResponse, rdsProxyClient, resourceModel, cxt) ->
-                        tagResource(clustersResponse, proxyClient, resourceModel, cxt, request.getDesiredResourceTags()));
-
+        return progress
+                .then(o ->
+                        handleExceptions(() -> {
+                            tagResource(proxy, proxyClient,  progress.getResourceModel(), progress.getCallbackContext(), request.getDesiredResourceTags());
+                            return ProgressEvent.progress(o.getResourceModel(), o.getCallbackContext()); })
+                );
     }
 
-    private ProgressEvent<ResourceModel, CallbackContext> tagResource(final DescribeClustersResponse describeClustersResponse,
+    private ProgressEvent<ResourceModel, CallbackContext> tagResource(final AmazonWebServicesClientProxy proxy,
                                                                       final ProxyClient<MemoryDbClient> proxyClient,
                                                                       final ResourceModel model,
                                                                       final CallbackContext callbackContext,
                                                                       final Map<String, String> tags) {
-        final String arn = describeClustersResponse.clusters().stream().findFirst().get().arn();
+        final String arn = model.getARN();
         final Set<Tag> currentTags = mapToTags(tags);
         final Set<Tag> existingTags = listTags(proxyClient, arn);
         final Set<Tag> tagsToRemove = Sets.difference(existingTags, currentTags);
         final Set<Tag> tagsToAdd = Sets.difference(currentTags, existingTags);
 
-        try {
-            if (tagsToRemove != null && !tagsToRemove.isEmpty()) {
-                proxyClient.injectCredentialsAndInvokeV2(Translator.translateToUntagResourceRequest(arn, tagsToRemove), proxyClient.client()::untagResource);
-            }
+        if (CollectionUtils.isNotEmpty(tagsToRemove)) {
+            proxy.injectCredentialsAndInvokeV2(Translator.translateToUntagResourceRequest(arn, tagsToRemove), proxyClient.client()::untagResource);
+        }
 
-            if (tagsToAdd != null && !tagsToAdd.isEmpty()) {
-                proxyClient.injectCredentialsAndInvokeV2(Translator.translateToTagResourceRequest(arn, tagsToAdd), proxyClient.client()::tagResource);
-            }
-        } catch (ClusterNotFoundException e) {
-            throw new CfnNotUpdatableException(e);
-        } catch (Exception e) {
-            throw new CfnGeneralServiceException(e);
+        if (CollectionUtils.isNotEmpty(tagsToAdd)) {
+            proxy.injectCredentialsAndInvokeV2(Translator.translateToTagResourceRequest(arn, tagsToAdd), proxyClient.client()::tagResource);
         }
 
         return ProgressEvent.progress(model, callbackContext);
@@ -247,13 +202,7 @@ public class UpdateHandler extends BaseHandlerStd {
 
     protected Set<Tag> listTags(final ProxyClient<MemoryDbClient> proxyClient,
                                 final String arn) {
-        try {
-            final ListTagsResponse listTagsResponse = proxyClient.injectCredentialsAndInvokeV2(Translator.translateToListTagsRequest(arn), proxyClient.client()::listTags);
-            return Translator.translateTagsFromSdk(listTagsResponse.tagList());
-        } catch (ClusterNotFoundException e) {
-            throw new CfnNotUpdatableException(e);
-        } catch (Exception e) {
-            throw new CfnGeneralServiceException(e);
-        }
+        final ListTagsResponse listTagsResponse = proxyClient.injectCredentialsAndInvokeV2(Translator.translateToListTagsRequest(arn), proxyClient.client()::listTags);
+        return Translator.translateTagsFromSdk(listTagsResponse.tagList());
     }
 }

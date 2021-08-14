@@ -21,6 +21,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
         "<a href="#securitygroupids" title="SecurityGroupIds">SecurityGroupIds</a>" : <i>[ String, ... ]</i>,
         "<a href="#maintenancewindow" title="MaintenanceWindow">MaintenanceWindow</a>" : <i>String</i>,
         "<a href="#parametergroupname" title="ParameterGroupName">ParameterGroupName</a>" : <i>String</i>,
+        "<a href="#port" title="Port">Port</a>" : <i>Integer</i>,
         "<a href="#snapshotretentionlimit" title="SnapshotRetentionLimit">SnapshotRetentionLimit</a>" : <i>Integer</i>,
         "<a href="#snapshotwindow" title="SnapshotWindow">SnapshotWindow</a>" : <i>String</i>,
         "<a href="#aclname" title="ACLName">ACLName</a>" : <i>String</i>,
@@ -54,6 +55,7 @@ Properties:
       - String</i>
     <a href="#maintenancewindow" title="MaintenanceWindow">MaintenanceWindow</a>: <i>String</i>
     <a href="#parametergroupname" title="ParameterGroupName">ParameterGroupName</a>: <i>String</i>
+    <a href="#port" title="Port">Port</a>: <i>Integer</i>
     <a href="#snapshotretentionlimit" title="SnapshotRetentionLimit">SnapshotRetentionLimit</a>: <i>Integer</i>
     <a href="#snapshotwindow" title="SnapshotWindow">SnapshotWindow</a>: <i>String</i>
     <a href="#aclname" title="ACLName">ACLName</a>: <i>String</i>
@@ -82,6 +84,8 @@ _Required_: Yes
 
 _Type_: String
 
+_Pattern_: <code>[a-z][a-z0-9\\-]*</code>
+
 _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-replacement)
 
 #### Description
@@ -98,7 +102,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 The compute and memory capacity of the nodes in the node group (shard).
 
-_Required_: Yes
+_Required_: No
 
 _Type_: String
 
@@ -164,6 +168,16 @@ _Type_: String
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
+#### Port
+
+The port number on which each member of the cluster accepts connections.
+
+_Required_: No
+
+_Type_: Integer
+
+_Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-replacement)
+
 #### SnapshotRetentionLimit
 
 For an automatic snapshot, the number of days for which MemoryDB retains the snapshot before deleting it.
@@ -188,7 +202,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### ACLName
 
-name of the Access Control List.
+The name of the Access Control List.
 
 _Required_: No
 
@@ -324,31 +338,19 @@ For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::G
 
 The status of the Cluster
 
-#### Shards
+#### Address
 
-The shards of the cluster.
+Returns the <code>Address</code> value.
 
-#### AvailabilityMode
+#### Port
 
-The availability mode of the cluster.
-
-#### ClusterEndpoint
-
-Returns the <code>ClusterEndpoint</code> value.
+Returns the <code>Port</code> value.
 
 #### ARN
 
 The Amazon Resource Name (ARN) of the cluster.
 
-#### Port
-
-The port number on which each member of the cluster accepts connections.
-
 #### ParameterGroupStatus
 
 The status of the parameter group associated with the cluster.
-
-#### EnginePatchVersion
-
-The engine version of the cluster including the minor version.
 

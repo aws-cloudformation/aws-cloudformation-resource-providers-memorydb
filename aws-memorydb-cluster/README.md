@@ -24,20 +24,31 @@ The code uses [Lombok](https://projectlombok.org/), and [you may have to install
 >
 >   ```sam local invoke TestEntrypoint --event sam-tests/create.json --region <region> ```
 
-## Running Contract Tests
+## Running Contract Tests (Locally)
 
 You can execute the following commands to run the tests.
 You will need to have docker installed and running.
 
-```bash
-# Package the code with Maven
-mvn package
-# Start the code as a lambda function in the background
-# You can also run it in a separate terminal (without the & to run it in the foreground)
-sam local start-lambda &
 
-#Execute a specific contract test
-cfn test -- -k contract_create_delete
+### Package the code with Maven
+```mvn package```
+### Start the code as a lambda function in the background
+```sam local start-lambda &```
+###Execute a specific contract test
+```cfn test -- -k contract_create_delete```
 
-#Execute all contract tests
-cfn test --enforce-timeout 10000
+###Execute all contract tests
+```cfn test --enforce-timeout 10000```
+
+####Check handler logs for failing contract tests
+```rpdk.log```
+
+## Running Contract Tests during resource registration
+
+###Submit the resource to CloudFormation and Execute all contract tests
+```cfn submit  --set-default --role-arn <cfn-logging-and-metrics-role-arn> --region <region-where-the-service-is-available>```
+
+###Check handler logs for failing contract tests
+```s3 -> CloudFormation/ContractTestResults/AWS::Service::ResourceName/<generated-name>.zip``` 
+
+Please download the zip file to see the output.
