@@ -6,5 +6,11 @@
     "Passwords": [
       "jhkghfghgfhfghfg4654654654564654645"
     ]
-  }
+  },
+  "Tags": [
+    {
+      "Key": "service",
+      "Value": "memorydb"
+    }
+  ]
 }

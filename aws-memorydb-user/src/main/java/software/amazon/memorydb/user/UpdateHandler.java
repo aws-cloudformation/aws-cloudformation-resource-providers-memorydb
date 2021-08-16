@@ -28,7 +28,7 @@ public class UpdateHandler extends BaseHandlerStd {
         this.logger = logger;
 
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
-            .then(progress -> updateUser(proxy, progress, proxyClient))
+            .then(progress -> updateUser(proxy, progress, request, proxyClient))
             .then(progress -> updateTags(proxy, progress, request, proxyClient))
             .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
@@ -36,17 +36,23 @@ public class UpdateHandler extends BaseHandlerStd {
     private ProgressEvent<ResourceModel, CallbackContext> updateUser(
         AmazonWebServicesClientProxy proxy,
         ProgressEvent<ResourceModel, CallbackContext> progress,
+        ResourceHandlerRequest<ResourceModel> request,
         ProxyClient<MemoryDbClient> proxyClient
     ) {
-        return proxy.initiate("AWS-MemoryDB-User::Update", proxyClient, progress.getResourceModel(),
-            progress.getCallbackContext())
-            .translateToServiceRequest(Translator::translateToUpdateRequest)
-            .makeServiceCall((awsRequest, client) -> handleExceptions(() ->
-                client.injectCredentialsAndInvokeV2(awsRequest, client.client()::updateUser)))
-            .stabilize(
-                (updateUserRequest, updateUserResponse, proxyInvocation, model, context) -> isUserStabilized(
-                    proxyInvocation, model, logger))
-            .progress();
+        if (hasChangeOnCoreModel(request.getDesiredResourceState(), request.getPreviousResourceState())) {
+            return proxy.initiate("AWS-MemoryDB-User::Update", proxyClient, progress.getResourceModel(),
+                progress.getCallbackContext())
+                .translateToServiceRequest(Translator::translateToUpdateRequest)
+                .makeServiceCall((awsRequest, client) -> handleExceptions(() ->
+                    client.injectCredentialsAndInvokeV2(awsRequest, client.client()::updateUser)))
+                .stabilize(
+                    (updateUserRequest, updateUserResponse, proxyInvocation, model, context) -> isUserStabilized(
+                        proxyInvocation, model, logger))
+                .progress();
+        } else {
+            return progress;
+        }
+
     }
 
     private ProgressEvent<ResourceModel, CallbackContext> updateTags(
@@ -55,13 +61,17 @@ public class UpdateHandler extends BaseHandlerStd {
         ResourceHandlerRequest<ResourceModel> request,
         ProxyClient<MemoryDbClient> proxyClient
     ) {
-        return progress
-            .then(o ->
-                handleExceptions(() -> {
-                    handleTagging(proxy, proxyClient,  request.getDesiredResourceTags(), progress.getResourceModel());
-                    return ProgressEvent.progress(o.getResourceModel(), o.getCallbackContext());
-                })
-            );
+        if (!request.getPreviousResourceTags().equals(request.getDesiredResourceTags())) {
+            return progress
+                .then(o ->
+                    handleExceptions(() -> {
+                        handleTagging(proxy, proxyClient,  request.getDesiredResourceTags(), progress.getResourceModel());
+                        return ProgressEvent.progress(o.getResourceModel(), o.getCallbackContext());
+                    })
+                );
+        } else {
+            return progress;
+        }
     }
 
     private void handleTagging(AmazonWebServicesClientProxy proxy, ProxyClient<MemoryDbClient> client,
@@ -91,6 +101,20 @@ public class UpdateHandler extends BaseHandlerStd {
                 Translator.translateToTagResourceRequest(model.getArn(), tagsToAdd),
                 client.client()::tagResource);
         }
+    }
+
+    private boolean hasChangeOnCoreModel(final ResourceModel r1, final ResourceModel r2){
+        return !getResourceWithoutTags(r1).equals(getResourceWithoutTags(r2));
+    }
+
+    private ResourceModel getResourceWithoutTags(final ResourceModel resourceModel) {
+        return ResourceModel.builder()
+            .status(resourceModel.getStatus())
+            .userName(resourceModel.getUserName())
+            .accessString(resourceModel.getAccessString())
+            .authenticationMode(resourceModel.getAuthenticationMode())
+            .arn(resourceModel.getArn())
+            .build();
     }
 
 }

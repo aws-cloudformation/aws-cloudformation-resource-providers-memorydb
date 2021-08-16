@@ -2,6 +2,7 @@ package software.amazon.memorydb.user;
 
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
 import software.amazon.awssdk.services.memorydb.model.DescribeUsersRequest;
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -93,13 +95,16 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         final UpdateHandler handler = new UpdateHandler();
 
-        final ResourceModel model = buildDefaultResourceModel();
+        final ResourceModel modelPrevious = buildDefaultResourceModel();
+        final ResourceModel modelDesired = buildDefaultResourceModel();
+        modelDesired.setAccessString(modelPrevious.getAccessString() + "v2");
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .previousResourceState(model)
-            .desiredResourceState(model)
+            .previousResourceState(modelPrevious)
+            .desiredResourceState(modelDesired)
             .build();
         request.setDesiredResourceTags(Translator.translateTags(TAG_SET));
+        request.setPreviousResourceTags(Collections.singletonMap("test", "test"));
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request,
             new CallbackContext(), proxyClient, logger);
@@ -123,8 +128,13 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         final ResourceModel model = buildDefaultResourceModel();
 
+        final ResourceModel modelPrevious = buildDefaultResourceModel();
+        final ResourceModel modelDesired = buildDefaultResourceModel();
+        modelDesired.setAccessString(modelPrevious.getAccessString() + "v2");
+
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(model)
+            .previousResourceState(modelPrevious)
+            .desiredResourceState(modelDesired)
             .build();
 
         try {
@@ -135,5 +145,44 @@ public class UpdateHandlerTest extends AbstractTestBase {
         } catch (CfnNotFoundException e) {
             assertThat(e.getCause() instanceof UserNotFoundException).isTrue();
         }
+    }
+
+    @Test
+    public void handleRequest_TagUpdate() {
+        final DescribeUsersResponse describeUserResponse =
+            DescribeUsersResponse.builder().users(buildDefaultUser()).build();
+        final ListTagsResponse listTagsResponse =
+            ListTagsResponse.builder().tagList(
+                ImmutableList.of(
+                    software.amazon.awssdk.services.memorydb.model.Tag.builder().key("test").value("test").build())
+            ).build();
+
+        when(sdkClient.listTags(any(ListTagsRequest.class))).thenReturn(listTagsResponse);
+        when(sdkClient.tagResource(any(TagResourceRequest.class))).thenReturn(TagResourceResponse.builder().build());
+        when(sdkClient.untagResource(any(UntagResourceRequest.class))).thenReturn(UntagResourceResponse.builder().build());
+        when(sdkClient.describeUsers(any(DescribeUsersRequest.class))).thenReturn(describeUserResponse);
+
+        final UpdateHandler handler = new UpdateHandler();
+
+        final ResourceModel model = buildDefaultResourceModel();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .previousResourceState(model)
+            .desiredResourceState(model)
+            .build();
+        request.setDesiredResourceTags(Translator.translateTags(TAG_SET));
+        request.setPreviousResourceTags(Collections.singletonMap("test", "test"));
+
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request,
+            new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getResourceModel().getStatus()).isEqualTo(ACTIVE);
+        assertThat(response.getResourceModel().getUserName()).isEqualTo(USER_NAME);
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
     }
 }

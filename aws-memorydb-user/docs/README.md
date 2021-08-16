@@ -66,7 +66,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### Tags
 
-An array of key-value pairs to apply to this cluster.
+An array of key-value pairs to apply to this user.
 
 _Required_: No
 

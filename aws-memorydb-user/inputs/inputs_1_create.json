@@ -6,5 +6,15 @@
     "Passwords": [
       "sasadasdsadadas2313123asdasd"
     ]
-  }
+  },
+  "Tags": [
+    {
+      "Key": "k1",
+      "Value": "v1"
+    },
+    {
+      "Key": "service",
+      "Value": "memorydb"
+    }
+  ]
 }
