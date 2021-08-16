@@ -26,7 +26,6 @@ Resources:
                 - "memorydb:CreateCluster"
                 - "memorydb:DeleteCluster"
                 - "memorydb:DescribeClusters"
-                - "memorydb:FailoverShard"
                 - "memorydb:ListTags"
                 - "memorydb:TagResource"
                 - "memorydb:UntagResource"

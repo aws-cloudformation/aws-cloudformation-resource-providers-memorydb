@@ -23,22 +23,21 @@
       "additionalProperties": false,
       "properties": {
         "Key": {
-          "description": "The key name of the tag. You can specify a value that is 1 to 127 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -.",
-          "pattern": "^(?!aws:)[a-zA-Z0-9_\\.\\/,=+-]{1,127}$",
+          "description": "A key is the required name of the tag. The string value can be from 1 to 128 Unicode characters in length and can't be prefixed with aws: or rds: . The string can only contain only the set of Unicode letters, digits, white-space, '_', '.', ':', '/', '=', '+', '-', '@'.",
+          "pattern": "^(?!aws:)(?!rds:)[a-zA-Z0-9 _\\.\\/,=+:\\-@]{1,128}$",
           "type": "string",
           "minLength": 1,
           "maxLength": 128
         },
         "Value": {
-          "description": "The value for the tag. You can specify a value that is 1 to 255 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -.",
+          "description": "A value is the optional value of the tag. The string value can be from 1 to 256 Unicode characters in length and can't be prefixed with aws: or rds: . The string can only contain only the set of Unicode letters, digits, white-space, '_', '.', ':', '/', '=', '+', '-', '@'.",
           "type": "string",
-          "pattern": "^(?!aws:)[a-zA-Z0-9_\\.\\/,=+-]{1,255}$",
+          "pattern": "^(?!aws:)(?!rds:)[a-zA-Z0-9 _\\.\\/,=+:\\-@]{1,256}$",
           "minLength": 1,
-          "maxLength": 128
+          "maxLength": 256
         }
       },
       "required": [
-        "Value",
         "Key"
       ]
     }
@@ -209,7 +208,6 @@
     "update": {
       "permissions": [
         "memorydb:UpdateCluster",
-        "memorydb:FailoverShard",
         "memorydb:DescribeClusters",
         "memorydb:ListTags",
         "memorydb:TagResource",

@@ -26,7 +26,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 
 #### Key
 
-The key name of the tag. You can specify a value that is 1 to 127 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -.
+A key is the required name of the tag. The string value can be from 1 to 128 Unicode characters in length and can't be prefixed with aws: or rds: . The string can only contain only the set of Unicode letters, digits, white-space, '_', '.', ':', '/', '=', '+', '-', '@'.
 
 _Required_: Yes
 
@@ -36,23 +36,23 @@ _Minimum_: <code>1</code>
 
 _Maximum_: <code>128</code>
 
-_Pattern_: <code>^(?!aws:)[a-zA-Z0-9_\.\/,=+-]{1,127}$</code>
+_Pattern_: <code>^(?!aws:)(?!rds:)[a-zA-Z0-9 _\.\/,=+:\-@]{1,128}$</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
 #### Value
 
-The value for the tag. You can specify a value that is 1 to 255 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -.
+A value is the optional value of the tag. The string value can be from 1 to 256 Unicode characters in length and can't be prefixed with aws: or rds: . The string can only contain only the set of Unicode letters, digits, white-space, '_', '.', ':', '/', '=', '+', '-', '@'.
 
-_Required_: Yes
+_Required_: No
 
 _Type_: String
 
 _Minimum_: <code>1</code>
 
-_Maximum_: <code>128</code>
+_Maximum_: <code>256</code>
 
-_Pattern_: <code>^(?!aws:)[a-zA-Z0-9_\.\/,=+-]{1,255}$</code>
+_Pattern_: <code>^(?!aws:)(?!rds:)[a-zA-Z0-9 _\.\/,=+:\-@]{1,256}$</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
