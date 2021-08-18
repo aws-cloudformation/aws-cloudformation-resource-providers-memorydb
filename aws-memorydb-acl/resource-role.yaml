@@ -24,7 +24,7 @@ Resources:
               - Effect: Allow
                 Action:
                 - "memorydb:CreateACL"
-                - "memorydb:DeleteACLs"
+                - "memorydb:DeleteACL"
                 - "memorydb:DescribeACLs"
                 - "memorydb:ListTags"
                 - "memorydb:ModifyReplicationGroup"
