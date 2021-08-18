@@ -8,7 +8,8 @@ phases:
       -  pip install pre-commit cloudformation-cli-java-plugin
   build:
     commands:
-      - pre-commit run --all-files      - |
+      - pre-commit run --all-files
+      - |
         if [ "$(ls -A $CODEBUILD_SRC_DIR)" ]; then
           cd $CODEBUILD_SRC_DIR
           # skip hidden folders
