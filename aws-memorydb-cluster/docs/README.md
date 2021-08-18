@@ -353,4 +353,3 @@ The Amazon Resource Name (ARN) of the cluster.
 #### ParameterGroupStatus
 
 The status of the parameter group used by the cluster.
-

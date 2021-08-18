@@ -49,6 +49,6 @@ You will need to have docker installed and running.
 ```cfn submit  --set-default --role-arn <cfn-logging-and-metrics-role-arn> --region <region-where-the-service-is-available>```
 
 ###Check handler logs for failing contract tests
-```s3 -> CloudFormation/ContractTestResults/AWS::Service::ResourceName/<generated-name>.zip``` 
+```s3 -> CloudFormation/ContractTestResults/AWS::Service::ResourceName/<generated-name>.zip```
 
 Please download the zip file to see the output.
