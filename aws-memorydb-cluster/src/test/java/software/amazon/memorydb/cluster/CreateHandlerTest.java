@@ -88,7 +88,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
         assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
-        assertThat(response.getResourceModel().getName()).isEqualTo(expectedResourceModel.getName());
+        assertThat(response.getResourceModel().getClusterName()).isEqualTo(expectedResourceModel.getClusterName());
         assertThat(response.getResourceModel()).isEqualTo(expectedResourceModel);
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();

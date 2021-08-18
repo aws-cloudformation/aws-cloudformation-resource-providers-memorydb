@@ -157,7 +157,7 @@ public class AbstractTestBase {
     }
 
     static Cluster getTestCluster(ResourceModel model) {
-        return Cluster.builder().name(model.getName()).description(model.getDescription()).status(model.getStatus()).nodeType(model.getNodeType())
+        return Cluster.builder().name(model.getClusterName()).description(model.getDescription()).status(model.getStatus()).nodeType(model.getNodeType())
                 .maintenanceWindow(model.getMaintenanceWindow()).snapshotWindow(model.getSnapshotWindow()).snapshotRetentionLimit(model.getSnapshotRetentionLimit()).aclName(model.getACLName())
                 .numberOfShards(model.getNumShards()).subnetGroupName(model.getSubnetGroupName()).securityGroups(getSecurityGroupMemberships(model.getSecurityGroupIds()))
                 .snsTopicArn(model.getSnsTopicArn()).snsTopicStatus(model.getSnsTopicStatus()).tlsEnabled(model.getTLSEnabled()).arn(model.getARN()).engineVersion(model.getEngineVersion())
@@ -180,7 +180,7 @@ public class AbstractTestBase {
 
         ResourceModel.ResourceModelBuilder builder =  ResourceModel.builder();
 
-        builder.name(cluster.name())
+        builder.clusterName(cluster.name())
                 .description(cluster.description())
                 .maintenanceWindow(cluster.maintenanceWindow())
                 .status(cluster.status())
@@ -203,7 +203,7 @@ public class AbstractTestBase {
     }
 
     static ResourceModel getDesiredTestResourceModel() {
-        return ResourceModel.builder().name(CLUSTER_NAME).description(CLUSTER_DESCRIPTION).nodeType(NODE_TYPE).numShards(NUM_SHARDS)
+        return ResourceModel.builder().clusterName(CLUSTER_NAME).description(CLUSTER_DESCRIPTION).nodeType(NODE_TYPE).numShards(NUM_SHARDS)
                             .numReplicasPerShard(NUM_REPLICAS_PER_SHARD).subnetGroupName(SUBNET_GROUP_NAME).securityGroupIds(SECURITY_GROUP_IDS).port(PORT)
                             .clusterEndpoint(Endpoint.builder().address(ENDPOINT_ADDRESS).port(ENDPOINT_PORT).build()).maintenanceWindow(MAINTENANCE_WINDOW)
                             .snsTopicArn(SNS_TOPIC_ARN).snsTopicStatus(SNS_TOPIC_STATUS).tLSEnabled(TLS_ENABLED).aCLName(ACL_NAME).build();

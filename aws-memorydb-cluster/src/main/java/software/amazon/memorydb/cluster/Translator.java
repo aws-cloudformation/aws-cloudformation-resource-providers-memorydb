@@ -50,7 +50,7 @@ public class Translator {
 
     static CreateClusterRequest translateToCreateRequest(final ResourceModel model, Map<String, String> tags) {
         return CreateClusterRequest.builder()
-                .clusterName(model.getName())
+                .clusterName(model.getClusterName())
                 .nodeType(model.getNodeType())
                 .parameterGroupName(model.getParameterGroupName())
                 .description(model.getDescription())
@@ -108,7 +108,7 @@ public class Translator {
     }
 
     static DescribeClustersRequest translateToReadRequest(final ResourceModel model) {
-        return DescribeClustersRequest.builder().clusterName(model.getName()).showShardDetails(true).build();
+        return DescribeClustersRequest.builder().clusterName(model.getClusterName()).showShardDetails(true).build();
     }
 
     static ListTagsRequest translateToListTagsRequest(final ResourceModel model) {
@@ -120,7 +120,7 @@ public class Translator {
     }
 
     static UpdateClusterRequest translateToUpdateRequest(final ResourceModel model, ClusterUpdateFieldType fieldType) {
-        UpdateClusterRequest.Builder builder = UpdateClusterRequest.builder().clusterName(model.getName());
+        UpdateClusterRequest.Builder builder = UpdateClusterRequest.builder().clusterName(model.getClusterName());
         switch (fieldType) {
             case DESCRIPTION:
                 builder.description(model.getDescription());
@@ -178,7 +178,7 @@ public class Translator {
         final int replicaCount = cluster.shards().stream().mapToInt(software.amazon.awssdk.services.memorydb.model.Shard::numberOfNodes).min().orElse(1) - 1;
         final List<String> securityGroupIds = cluster.securityGroups().stream().map(SecurityGroupMembership::securityGroupId).collect(Collectors.toList());
         return ResourceModel.builder()
-                .name(cluster.name())
+                .clusterName(cluster.name())
                 .description(cluster.description())
                 .status(cluster.status())
                 .nodeType(cluster.nodeType())
@@ -207,7 +207,7 @@ public class Translator {
     }
 
     static DeleteClusterRequest translateToDeleteRequest(final ResourceModel model) {
-        return DeleteClusterRequest.builder().clusterName(model.getName()).finalSnapshotName(model.getFinalSnapshotName()).build();
+        return DeleteClusterRequest.builder().clusterName(model.getClusterName()).finalSnapshotName(model.getFinalSnapshotName()).build();
     }
 
     static DescribeClustersRequest translateToListRequest(final String nextToken) {

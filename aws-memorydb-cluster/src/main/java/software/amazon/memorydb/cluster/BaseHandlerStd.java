@@ -93,7 +93,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         } catch (ClusterNotFoundException e) {
             throw new CfnNotFoundException(ResourceModel.TYPE_NAME, e.getMessage());
         } catch (Exception e) {
-            throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, model.getName(), e);
+            throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, model.getClusterName(), e);
         }
     }
 

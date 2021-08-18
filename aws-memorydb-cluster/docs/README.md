@@ -12,7 +12,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 {
     "Type" : "AWS::MemoryDB::Cluster",
     "Properties" : {
-        "<a href="#name" title="Name">Name</a>" : <i>String</i>,
+        "<a href="#clustername" title="ClusterName">ClusterName</a>" : <i>String</i>,
         "<a href="#description" title="Description">Description</a>" : <i>String</i>,
         "<a href="#nodetype" title="NodeType">NodeType</a>" : <i>String</i>,
         "<a href="#numshards" title="NumShards">NumShards</a>" : <i>Integer</i>,
@@ -45,7 +45,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 <pre>
 Type: AWS::MemoryDB::Cluster
 Properties:
-    <a href="#name" title="Name">Name</a>: <i>String</i>
+    <a href="#clustername" title="ClusterName">ClusterName</a>: <i>String</i>
     <a href="#description" title="Description">Description</a>: <i>String</i>
     <a href="#nodetype" title="NodeType">NodeType</a>: <i>String</i>
     <a href="#numshards" title="NumShards">NumShards</a>: <i>Integer</i>
@@ -76,21 +76,21 @@ Properties:
 
 ## Properties
 
-#### Name
+#### ClusterName
 
-The cluster identifier. This parameter is stored as a lowercase string.
+The name of the cluster. This value must be unique as it also serves as the cluster identifier.
 
-_Required_: Yes
+_Required_: No
 
 _Type_: String
 
-_Pattern_: <code>[a-z][a-z0-9\\-]*</code>
+_Pattern_: <code>[a-z][a-z0-9\-]*</code>
 
-_Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-replacement)
+_Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
 #### Description
 
-A user-created description for the Cluster.
+An optional description of the cluster.
 
 _Required_: No
 
@@ -100,7 +100,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### NodeType
 
-The compute and memory capacity of the nodes in the node group (shard).
+The compute and memory capacity of the nodes in the cluster.
 
 _Required_: No
 
@@ -110,7 +110,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### NumShards
 
-A parameter that specifies the number of shards for this Redis cluster.
+The number of shards the cluster will contain.
 
 _Required_: No
 
@@ -120,7 +120,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### NumReplicasPerShard
 
-An optional parameter that specifies the number of replica nodes in each node group (shard). Valid values are 0 to 5.
+The number of replicas to apply to each shard. The limit is 5.
 
 _Required_: No
 
@@ -150,7 +150,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### MaintenanceWindow
 
-Specifies the weekly time range during which maintenance on the cluster is performed. It is specified as a range in the format ddd:hh24:mi-ddd:hh24:mi (24H Clock UTC). The minimum maintenance window is a 60 minute period. 
+Specifies the weekly time range during which maintenance on the cluster is performed. It is specified as a range in the format ddd:hh24:mi-ddd:hh24:mi (24H Clock UTC). The minimum maintenance window is a 60 minute period.
 
 _Required_: No
 
@@ -180,9 +180,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 #### SnapshotRetentionLimit
 
-For an automatic snapshot, the number of days for which MemoryDB retains the snapshot before deleting it.
-
-For manual snapshots, this field reflects the SnapshotRetentionLimit for the source cluster when the snapshot was created. This field is otherwise ignored: Manual snapshots do not expire, and can only be deleted using the DeleteSnapshot operation.
+The number of days for which MemoryDB retains automatic snapshots before deleting them. For example, if you set SnapshotRetentionLimit to 5, a snapshot that was taken today is retained for 5 days before being deleted.
 
 _Required_: No
 
@@ -192,7 +190,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### SnapshotWindow
 
-The daily time range during which MemoryDB takes daily snapshots of the source cluster.
+The daily time range (in UTC) during which MemoryDB begins taking a daily snapshot of your cluster.
 
 _Required_: No
 
@@ -202,11 +200,13 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### ACLName
 
-The name of the Access Control List.
+The name of the Access Control List to associate with the cluster.
 
 _Required_: No
 
 _Type_: String
+
+_Pattern_: <code>[a-zA-Z][a-zA-Z0-9\-]*</code>
 
 _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html#update-no-interrupt)
 
@@ -222,7 +222,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### SnsTopicStatus
 
-Status to enable or disable the Amazon Simple Notification Service (SNS) notifications for the cluster.
+The status of the Amazon SNS notification topic. Notifications are sent only if the status is enabled.
 
 _Required_: No
 
@@ -244,7 +244,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 #### KmsKeyId
 
-AWS KMS keys (KMS key) for encryption at rest.
+The ID of the KMS key used to encrypt the cluster.
 
 _Required_: No
 
@@ -254,7 +254,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 #### SnapshotArns
 
-One or more MemoryDB Snapshot ARNs to restore from.
+A list of Amazon Resource Names (ARN) that uniquely identify the RDB snapshot files stored in Amazon S3. The snapshot files are used to populate the new cluster. The Amazon S3 object name in the ARN cannot contain any commas.
 
 _Required_: No
 
@@ -264,7 +264,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 #### SnapshotName
 
-Name of a MemoryDB Snapshot to restore from.
+The name of a snapshot from which to restore data into the new cluster. The snapshot status changes to restoring while the new cluster is being created.
 
 _Required_: No
 
@@ -274,7 +274,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 #### FinalSnapshotName
 
-Name of the backup MemoryDB Snapshot.
+The user-supplied name of a final cluster snapshot. This is the unique name that identifies the snapshot. MemoryDB creates the snapshot, and then deletes the cluster immediately afterward.
 
 _Required_: No
 
@@ -284,7 +284,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 #### EngineVersion
 
-The engine version of the cluster.
+The Redis engine version used by the cluster.
 
 _Required_: No
 
@@ -326,7 +326,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 ### Ref
 
-When you pass the logical ID of this resource to the intrinsic `Ref` function, Ref returns the Name.
+When you pass the logical ID of this resource to the intrinsic `Ref` function, Ref returns the ClusterName.
 
 ### Fn::GetAtt
 
@@ -336,7 +336,7 @@ For more information about using the `Fn::GetAtt` intrinsic function, see [Fn::G
 
 #### Status
 
-The status of the Cluster
+The status of the cluster. For example, Available, Updating, Creating.
 
 #### Address
 
@@ -352,5 +352,5 @@ The Amazon Resource Name (ARN) of the cluster.
 
 #### ParameterGroupStatus
 
-The status of the parameter group associated with the cluster.
+The status of the parameter group used by the cluster.
 

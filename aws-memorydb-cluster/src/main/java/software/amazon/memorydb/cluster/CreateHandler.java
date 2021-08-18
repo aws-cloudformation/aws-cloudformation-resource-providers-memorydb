@@ -31,11 +31,11 @@ public class CreateHandler extends BaseHandlerStd {
         try {
 
             logger.log(String.format("Resource model: %s", desiredResourceState.toString()));
-            Validate.isTrue(desiredResourceState.getName() != null, NAME_REQUIRED_FOR_CLUSTER);
+            Validate.isTrue(desiredResourceState.getClusterName() != null, NAME_REQUIRED_FOR_CLUSTER);
             Validate.isTrue(desiredResourceState.getNodeType() != null, NODE_TYPE_REQUIRED_FOR_CLUSTER);
             Validate.isTrue(desiredResourceState.getACLName() != null, ACL_NAME_REQUIRED_FOR_CLUSTER);
 
-            if (!desiredResourceState.getName().matches("[a-z][a-z0-9\\\\-]*")) {
+            if (!desiredResourceState.getClusterName().matches("[a-z][a-z0-9\\\\-]*")) {
                 throw new CfnInvalidRequestException(ID_WRONG_FORMAT);
             }
 
