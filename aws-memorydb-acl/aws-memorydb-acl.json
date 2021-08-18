@@ -103,7 +103,7 @@
     "delete": {
       "permissions": [
         "memorydb:ModifyReplicationGroup",
-        "memorydb:DeleteACLs",
+        "memorydb:DeleteACL",
         "memorydb:DescribeACLs"
       ]
     },
