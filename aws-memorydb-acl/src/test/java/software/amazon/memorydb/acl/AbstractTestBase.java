@@ -67,7 +67,7 @@ public class AbstractTestBase {
     return buildDefaultAcl(status, false, USER_NAMES);
   }
 
-  protected ACL buildDefaultAcl(String status, boolean hasRG, List<String> userNames) {
+  protected ACL buildDefaultAcl(String status, boolean hasCluster, List<String> userNames) {
 
     ACL.Builder builder = ACL
         .builder()
@@ -76,12 +76,12 @@ public class AbstractTestBase {
         .arn(ARN)
         .status(status);
 
-    builder.clusters(hasRG ? CLUSTERS : ImmutableList.of());
+    builder.clusters(hasCluster ? CLUSTERS : ImmutableList.of());
 
     return builder.build();
   }
 
-  protected ResourceModel buildDefaultResourceModel(boolean hasRG, List<String> userNames) {
+  protected ResourceModel buildDefaultResourceModel(List<String> userNames) {
     ResourceModel.ResourceModelBuilder builder = ResourceModel.builder()
         .status(STATUS)
         .aCLName(ACL_NAME)
@@ -92,12 +92,8 @@ public class AbstractTestBase {
     return builder.build();
   }
 
-  protected ResourceModel buildDefaultResourceModel(List<String> userIds) {
-    return buildDefaultResourceModel(false, userIds);
-  }
-
   protected ResourceModel buildDefaultResourceModel() {
-    return buildDefaultResourceModel(false, USER_NAMES);
+    return buildDefaultResourceModel(USER_NAMES);
   }
 
   static ProxyClient<MemoryDbClient> MOCK_PROXY(

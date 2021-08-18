@@ -39,7 +39,7 @@ public class UpdateHandler extends BaseHandlerStd {
         this.logger = logger;
 
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
-            .then(progress -> updateACL(proxy, progress, proxyClient))
+            .then(progress -> updateACL(proxy, progress,request, proxyClient))
             .then(progress -> updateTags(proxy, progress, request, proxyClient))
             .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
     }
@@ -47,59 +47,64 @@ public class UpdateHandler extends BaseHandlerStd {
     private ProgressEvent<ResourceModel, CallbackContext> updateACL(
         AmazonWebServicesClientProxy proxy,
         ProgressEvent<ResourceModel, CallbackContext> progress,
+        ResourceHandlerRequest<ResourceModel> request,
         ProxyClient<MemoryDbClient> proxyClient
     ) {
-        return proxy.initiate("AWS-MemoryDB-User::Update", proxyClient, progress.getResourceModel(),
-            progress.getCallbackContext())
-            .translateToServiceRequest(Translator::translateToUpdateRequest)
-            .makeServiceCall((awsRequest, proxyInvocation)  -> handleExceptions(() -> {
-                    try {
-                        //Get current acl
-                        DescribeAcLsRequest describeRequest =
-                            DescribeAcLsRequest.builder().aclName(awsRequest.aclName()).build();
-                        final DescribeAcLsResponse describeResponse =
-                            proxyInvocation.injectCredentialsAndInvokeV2(describeRequest,
-                                proxyInvocation.client()::describeACLs);
+        if (hasChangeOnCoreModel(request.getDesiredResourceState(), request.getPreviousResourceState())) {
+            return proxy.initiate("AWS-MemoryDB-User::Update", proxyClient, progress.getResourceModel(),
+                progress.getCallbackContext())
+                .translateToServiceRequest(Translator::translateToUpdateRequest)
+                .makeServiceCall((awsRequest, proxyInvocation)  -> handleExceptions(() -> {
+                        try {
+                            //Get current acl
+                            DescribeAcLsRequest describeRequest =
+                                DescribeAcLsRequest.builder().aclName(awsRequest.aclName()).build();
+                            final DescribeAcLsResponse describeResponse =
+                                proxyInvocation.injectCredentialsAndInvokeV2(describeRequest,
+                                    proxyInvocation.client()::describeACLs);
 
-                        ACL acl = describeResponse.acLs().get(0);
+                            ACL acl = describeResponse.acLs().get(0);
 
-                        //Create list of resources to add and remove
-                        List<String> userIdsToAdd = progress.getResourceModel().getUserNames().stream()
-                            .distinct()
-                            .filter(((Predicate<String>) acl.userNames()::contains).negate())
-                            .collect(Collectors.toList());
+                            //Create list of resources to add and remove
+                            List<String> userIdsToAdd = progress.getResourceModel().getUserNames().stream()
+                                .distinct()
+                                .filter(((Predicate<String>) acl.userNames()::contains).negate())
+                                .collect(Collectors.toList());
 
-                        this.logger.log(acl.toString());
+                            this.logger.log(acl.toString());
 
-                        List<String> userIdsToRemove = acl.userNames().stream()
-                            .distinct()
-                            .filter(
-                                ((Predicate<String>) progress.getResourceModel().getUserNames()::contains).negate())
-                            .collect(Collectors.toList());
+                            List<String> userIdsToRemove = acl.userNames().stream()
+                                .distinct()
+                                .filter(
+                                    ((Predicate<String>) progress.getResourceModel().getUserNames()::contains).negate())
+                                .collect(Collectors.toList());
 
-                        Builder builder = UpdateAclRequest.builder();
-                        builder.aclName(acl.name());
-                        builder.userNamesToAdd(userIdsToAdd.isEmpty() ? null : userIdsToAdd);
-                        builder.userNamesToRemove(userIdsToRemove.isEmpty() ? null : userIdsToRemove);
-                        UpdateAclRequest updateRequest = builder.build();
+                            Builder builder = UpdateAclRequest.builder();
+                            builder.aclName(acl.name());
+                            builder.userNamesToAdd(userIdsToAdd.isEmpty() ? null : userIdsToAdd);
+                            builder.userNamesToRemove(userIdsToRemove.isEmpty() ? null : userIdsToRemove);
+                            UpdateAclRequest updateRequest = builder.build();
 
-                        //Update ACL
-                        final UpdateAclResponse response =
-                            proxyInvocation.injectCredentialsAndInvokeV2(updateRequest,
-                                proxyInvocation.client()::updateACL);
+                            //Update ACL
+                            final UpdateAclResponse response =
+                                proxyInvocation.injectCredentialsAndInvokeV2(updateRequest,
+                                    proxyInvocation.client()::updateACL);
 
-                        return response;
-                    } catch (final AclNotFoundException e) {
-                        throw new CfnNotFoundException(e);
-                    } catch (final AwsServiceException e) {
-                        throw new CfnGeneralServiceException(e);
+                            return response;
+                        } catch (final AclNotFoundException e) {
+                            throw new CfnNotFoundException(e);
+                        } catch (final AwsServiceException e) {
+                            throw new CfnGeneralServiceException(e);
+                        }
                     }
-                }
-            ))
-            .stabilize(
-                (updateUserRequest, updateUserResponse, proxyInvocation, model, context) -> isAclStabilized(
-                    proxyInvocation, model, logger))
-            .progress();
+                ))
+                .stabilize(
+                    (updateUserRequest, updateUserResponse, proxyInvocation, model, context) -> isAclStabilized(
+                        proxyInvocation, model, logger))
+                .progress();
+        } else {
+            return progress;
+        }
     }
 
     private ProgressEvent<ResourceModel, CallbackContext> updateTags(
@@ -108,13 +113,17 @@ public class UpdateHandler extends BaseHandlerStd {
         ResourceHandlerRequest<ResourceModel> request,
         ProxyClient<MemoryDbClient> proxyClient
     ) {
-        return progress
-            .then(o ->
-                handleExceptions(() -> {
-                    handleTagging(proxy, proxyClient,  request.getDesiredResourceTags(), progress.getResourceModel());
-                    return ProgressEvent.progress(o.getResourceModel(), o.getCallbackContext());
-                })
-            );
+        if (!request.getPreviousResourceTags().equals(request.getDesiredResourceTags())) {
+            return progress
+                .then(o ->
+                    handleExceptions(() -> {
+                        handleTagging(proxy, proxyClient,  request.getDesiredResourceTags(), progress.getResourceModel());
+                        return ProgressEvent.progress(o.getResourceModel(), o.getCallbackContext());
+                    })
+                );
+        } else {
+            return progress;
+        }
     }
 
     private void handleTagging(AmazonWebServicesClientProxy proxy, ProxyClient<MemoryDbClient> client,
@@ -144,6 +153,17 @@ public class UpdateHandler extends BaseHandlerStd {
                 Translator.translateToTagResourceRequest(model.getArn(), tagsToAdd),
                 client.client()::tagResource);
         }
+    }
+
+    private boolean hasChangeOnCoreModel(final ResourceModel r1, final ResourceModel r2){
+        return !getRequestResource(r1).equals(getRequestResource(r2));
+    }
+
+    private ResourceModel getRequestResource(final ResourceModel resourceModel) {
+        return ResourceModel.builder()
+            .aCLName(resourceModel.getACLName())
+            .userNames(resourceModel.getUserNames())
+            .build();
     }
 
 }

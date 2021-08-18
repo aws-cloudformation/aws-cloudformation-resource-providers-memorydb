@@ -152,7 +152,7 @@ public class Translator {
         null;
   }
 
-  public static UntagResourceRequest translateToUntagResourceRequest(String arn,
+  static UntagResourceRequest translateToUntagResourceRequest(String arn,
       Collection<software.amazon.memorydb.acl.Tag> tagsToRemove) {
     return UntagResourceRequest.builder()
         .resourceArn(arn)
@@ -162,7 +162,7 @@ public class Translator {
         .build();
   }
 
-  public static TagResourceRequest translateToTagResourceRequest(String arn,
+  static TagResourceRequest translateToTagResourceRequest(String arn,
       Collection<software.amazon.memorydb.acl.Tag> tags) {
     return  TagResourceRequest.builder()
         .resourceArn(arn)

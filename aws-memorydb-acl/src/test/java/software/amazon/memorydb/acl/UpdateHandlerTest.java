@@ -2,6 +2,7 @@ package software.amazon.memorydb.acl;
 
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
@@ -91,9 +92,9 @@ public class UpdateHandlerTest extends AbstractTestBase {
         });
 
         final DescribeAcLsResponse describeInProgressAclResponse =
-            DescribeAcLsResponse.builder().acLs(buildDefaultAcl(MODIFYING)).build();
+            DescribeAcLsResponse.builder().acLs(buildDefaultAcl(MODIFYING, true, ImmutableList.of("test"))).build();
         final DescribeAcLsResponse describeUpdatedAclResponse =
-            DescribeAcLsResponse.builder().acLs(buildDefaultAcl(ACTIVE)).build();
+            DescribeAcLsResponse.builder().acLs(buildDefaultAcl(ACTIVE, true, ImmutableList.of("test"))).build();
         AtomicInteger attempt = new AtomicInteger(2);
 
         when(sdkClient.tagResource(any(TagResourceRequest.class))).thenReturn(TagResourceResponse.builder().build());
@@ -109,13 +110,15 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         final UpdateHandler handler = new UpdateHandler();
 
-        final ResourceModel model = buildDefaultResourceModel();
+        final ResourceModel modelPrevious = buildDefaultResourceModel();
+        final ResourceModel modelDesired = buildDefaultResourceModel(ImmutableList.of("test"));
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(model)
+            .previousResourceState(modelPrevious)
+            .desiredResourceState(modelDesired)
+            .previousResourceTags(Collections.singletonMap("test", "test"))
+            .desiredResourceTags(Translator.translateTags(TAG_SET))
             .build();
-        request.getDesiredResourceState().setTags(TAG_SET);
-        request.setDesiredResourceTags(Translator.translateTags(TAG_SET));
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler
             .handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
@@ -137,10 +140,11 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         final UpdateHandler handler = new UpdateHandler();
 
-        final ResourceModel model = ResourceModel.builder().build();
-
+        final ResourceModel modelPrevious = buildDefaultResourceModel();
+        final ResourceModel modelDesired = buildDefaultResourceModel(ImmutableList.of("test"));
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(model)
+            .previousResourceState(modelPrevious)
+            .desiredResourceState(modelDesired)
             .build();
 
         try {
@@ -205,12 +209,15 @@ public class UpdateHandlerTest extends AbstractTestBase {
         });
         final UpdateHandler handler = new UpdateHandler();
 
-        final ResourceModel model = buildDefaultResourceModel(target);
+        final ResourceModel modelPrevious = buildDefaultResourceModel();
+        final ResourceModel modelDesired = buildDefaultResourceModel(target);
 
         final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
-            .desiredResourceState(model)
+            .previousResourceState(modelPrevious)
+            .desiredResourceState(modelDesired)
+            .previousResourceTags(Collections.singletonMap("test", "test"))
+            .desiredResourceTags(Translator.translateTags(TAG_SET))
             .build();
-        request.setDesiredResourceTags(Translator.translateTags(TAG_SET));
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler
             .handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
