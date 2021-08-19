@@ -11,10 +11,10 @@
       "k2": "vOld"
     },
     "desiredResourceState": {
-      "Name": "memdb-cfn-tst-clstr7"
+      "ClusterName": "memdb-cfn-tst-clstr7"
     },
     "previousResourceState": {
-      "Name": "memdb-cfn-tst-clstr7",
+      "ClusterName": "memdb-cfn-tst-clstr7",
       "Description": "memdb cfn test cluster",
       "Status": "available",
       "NumberOfShards": 1,

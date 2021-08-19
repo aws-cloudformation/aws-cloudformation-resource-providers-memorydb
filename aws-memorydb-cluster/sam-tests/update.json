@@ -3,7 +3,7 @@
   "request": {
     "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
     "desiredResourceState": {
-      "Name": "memdb-cfn-tst-clstr",
+      "ClusterName": "memdb-cfn-tst-clstr",
       "Description": "memdb cfn test cluster updated",
       "MaintenanceWindow": "sat:06:30-sat:07:30",
       "SnapshotWindow": "09:30-11:30",
@@ -12,7 +12,7 @@
       "NumReplicasPerShard": 2
     },
     "previousResourceState": {
-      "Name": "memdb-cfn-tst-clstr",
+      "ClusterName": "memdb-cfn-tst-clstr",
       "Status": "available",
       "Description": "memdb cfn test cluster",
       "NumberOfShards": 1,

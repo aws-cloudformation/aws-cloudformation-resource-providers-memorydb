@@ -3,7 +3,7 @@
   "request": {
     "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
     "desiredResourceState": {
-      "Name": "memdb-cfn-tst-clstr2",
+      "ClusterName": "memdb-cfn-tst-clstr2",
       "FinalSnapshotName": "memdbfinalsnapshot"
     },
     "logicalResourceIdentifier": "MyResource"

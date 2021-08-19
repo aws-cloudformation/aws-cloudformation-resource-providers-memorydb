@@ -1,5 +1,5 @@
 {
-  "Name": "cfncontractcluster2",
+  "ClusterName": "cfncontractcluster2",
   "NodeType": "db.r6g.large",
   "NumShards": 1,
   "Description": "memdb cfn test cluster updated",
