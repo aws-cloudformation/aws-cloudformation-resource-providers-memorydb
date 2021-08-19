@@ -1,0 +1,38 @@
+{
+  "action": "UPDATE",
+  "request": {
+    "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
+    "desiredResourceState": {
+      "ClusterName": "memdb-cfn-tst-clstr",
+      "Description": "memdb cfn test cluster updated",
+      "MaintenanceWindow": "sat:06:30-sat:07:30",
+      "SnapshotWindow": "09:30-11:30",
+      "NumShards": 2,
+      "SnapshotRetentionLimit": 2,
+      "NumReplicasPerShard": 2
+    },
+    "previousResourceState": {
+      "ClusterName": "memdb-cfn-tst-clstr",
+      "Status": "available",
+      "Description": "memdb cfn test cluster",
+      "NumberOfShards": 1,
+      "ClusterEndpoint": {
+        "Address": "memdb-cfn-tst-clstr.cg6t24.clustercfg.memorydb-qa.us-east-1.amazonaws.com",
+        "Port": 6379
+      },
+      "NodeType": "db.r6g.large",
+      "EngineVersion": "6.0",
+      "EnginePatchVersion": "6.0.5",
+      "ParameterGroupStatus": "in-sync",
+      "SecurityGroups": [],
+      "SubnetGroupName": "memorydbsubnetgroup",
+      "SnapshotRetentionLimit": 0,
+      "MaintenanceWindow": "sun:06:30-sun:07:30",
+      "SnapshotWindow": "10:00-11:00",
+      "ACLName": "open-access",
+      "AutoMinorVersionUpgrade": true
+    },
+    "logicalResourceIdentifier": "MyResource"
+  },
+  "callbackContext": null
+}

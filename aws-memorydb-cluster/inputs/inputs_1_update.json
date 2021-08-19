@@ -1,0 +1,19 @@
+{
+  "ClusterName": "cfncontractcluster2",
+  "NodeType": "db.r6g.large",
+  "NumShards": 1,
+  "Description": "memdb cfn test cluster updated",
+  "MaintenanceWindow": "sat:04:30-sat:05:30",
+  "SnapshotWindow": "09:30-11:30",
+  "SnapshotRetentionLimit": 2,
+  "Tags": [
+    {
+      "Key": "k1",
+      "Value": "v1"
+    },
+    {
+      "Key": "service",
+      "Value": "memorydb"
+    }
+  ]
+}

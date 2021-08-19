@@ -1,0 +1,4 @@
+.gradle
+aws-memorydb-cluter/target
+aws-memorydb-cluter/.idea
+aws-memorydb-cluter/rpdk.log

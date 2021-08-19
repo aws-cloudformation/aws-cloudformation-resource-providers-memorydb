@@ -1,0 +1,11 @@
+{
+  "action": "READ",
+  "request": {
+    "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
+    "desiredResourceState": {
+      "ClusterName": "memdb-cfn-tst-clstr-10"
+    },
+    "logicalResourceIdentifier": "MyResource"
+  },
+  "callbackContext": null
+}
