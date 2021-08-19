@@ -13,6 +13,19 @@
           ]
         }
       }
+    },
+    "CfnContractTestUserV2": {
+      "Type": "AWS::MemoryDB::User",
+      "Properties": {
+        "UserName": "user-contract-123456789v2",
+        "AccessString": "+get ~keys*",
+        "AuthenticationMode": {
+          "Type": "password",
+          "Passwords": [
+            "jhkghfghgfhfghfg4654654654564654645"
+          ]
+        }
+      }
     }
   }
 }
