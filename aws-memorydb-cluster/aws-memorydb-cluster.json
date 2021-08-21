@@ -180,10 +180,10 @@
     "/properties/ParameterGroupStatus"
   ],
   "required": [
-    "Name"
+    "ClusterName"
   ],
   "createOnlyProperties": [
-    "/properties/Name",
+    "/properties/ClusterName",
     "/properties/TLSEnabled",
     "/properties/KmsKeyId",
     "/properties/Port",
