@@ -3,6 +3,5 @@
   "NodeType": "db.r6g.large",
   "NumShards": 1,
   "NumReplicasPerShard": 1,
-  "SubnetGroupName": "memorydbsubnetgroup",
   "ACLName": "open-access"
 }
