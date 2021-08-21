@@ -3,5 +3,5 @@
   "NodeType": "db.r6g.large",
   "NumShards": 1,
   "NumReplicasPerShard": 1,
-  "SubnetGroupName": "invalidsubnetgroup"
+  "ACLName": "open-access"
 }
