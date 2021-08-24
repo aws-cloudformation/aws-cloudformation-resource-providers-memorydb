@@ -9,13 +9,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import org.apache.commons.collections.CollectionUtils;
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
 import software.amazon.awssdk.services.memorydb.model.AclNotFoundException;
 import software.amazon.awssdk.services.memorydb.model.Cluster;
 import software.amazon.awssdk.services.memorydb.model.ClusterAlreadyExistsException;
 import software.amazon.awssdk.services.memorydb.model.ClusterNotFoundException;
-import software.amazon.awssdk.services.memorydb.model.DescribeClustersRequest;
 import software.amazon.awssdk.services.memorydb.model.DescribeClustersResponse;
 import software.amazon.awssdk.services.memorydb.model.InvalidClusterStateException;
 import software.amazon.awssdk.services.memorydb.model.InvalidNodeStateException;
@@ -32,7 +31,6 @@ import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.exceptions.CfnServiceInternalErrorException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
-import software.amazon.cloudformation.proxy.CallChain;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
@@ -47,8 +45,8 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         // we already set the timeout in the schema https://github.com/aws-cloudformation/aws-cloudformation-resource-schema
         .timeout(Duration.ofDays(365L))
         // Set the delay to 1 minutes so the stabilization code only calls
-        // DescribeGlobalReplicationgroups every 1 minute - create takes
-        // 10+ minutes so there's no need to check if the cluster is available more than every couple minutes.
+        // DescribeClusters every 1 minute - create takes
+        // 15+ minutes so there's no need to check if the cluster is available more than every couple minutes.
         .delay(Duration.ofSeconds(60))
         .build();
     protected static final BiFunction<ResourceModel, ProxyClient<MemoryDbClient>, ResourceModel> EMPTY_CALL = (model, proxyClient) -> model;
@@ -118,17 +116,42 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
         }
     }
 
-    protected CallChain.Completed<DescribeClustersRequest,
-            DescribeClustersResponse,
-            MemoryDbClient,
-            ResourceModel,
-            CallbackContext> describeClusters(final AmazonWebServicesClientProxy proxy,
-                                                           final ProxyClient<MemoryDbClient> proxyClient,
-                                                           final ResourceModel model,
-                                                           final CallbackContext callbackContext) {
-        return proxy.initiate("AWS-MemoryDB-Cluster::Read", proxyClient, model, callbackContext)
+    protected ProgressEvent<ResourceModel, CallbackContext> describeClusters(
+            AmazonWebServicesClientProxy proxy,
+            ProgressEvent<ResourceModel, CallbackContext> progress,
+            ProxyClient<MemoryDbClient> proxyClient
+    ) {
+        return proxy
+                .initiate("AWS-MemoryDB-Cluster::Describe", proxyClient, progress.getResourceModel(),
+                        progress.getCallbackContext())
                 .translateToServiceRequest(Translator::translateToReadRequest)
-                .makeServiceCall((awsRequest, client) -> handleExceptions(() -> client.injectCredentialsAndInvokeV2(awsRequest, client.client()::describeClusters)));
+                .makeServiceCall((awsRequest, client) -> handleExceptions(() ->
+                        client.injectCredentialsAndInvokeV2(awsRequest, client.client()::describeClusters)))
+                .done((describeClustersRequest, describeClustersResponse, proxyInvocation, resourceModel, context) ->
+                        ProgressEvent.progress(Translator.translateFromReadResponse(describeClustersResponse), context));
+    }
+
+    protected ProgressEvent<ResourceModel, CallbackContext> listTags(
+            AmazonWebServicesClientProxy proxy,
+            ProgressEvent<ResourceModel, CallbackContext> progress,
+            ProxyClient<MemoryDbClient> proxyClient
+    ) {
+
+        if(!isArnPresent(progress.getResourceModel())) {
+            return progress;
+        }
+
+        return proxy
+                .initiate("AWS-MemoryDB-Cluster::ListTags", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
+                .translateToServiceRequest(Translator::translateToListTagsRequest)
+                .makeServiceCall((awsRequest, client) -> handleExceptions(() -> client.injectCredentialsAndInvokeV2(awsRequest, client.client()::listTags)))
+                .done( (listTagsRequest, listTagsResponse, proxyInvocation, resourceModel, context) -> {
+                            if(CollectionUtils.isNotEmpty(listTagsResponse.tagList())) {
+                                resourceModel.setTags(Translator.translateTags(listTagsResponse.tagList()));
+                            }
+                            return ProgressEvent.progress(resourceModel, context);
+                        }
+                );
     }
 
     protected <T> T handleExceptions(Supplier<T> call) {

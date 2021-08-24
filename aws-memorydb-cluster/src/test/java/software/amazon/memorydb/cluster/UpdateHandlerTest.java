@@ -164,7 +164,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
     public void handleRequest_UpdateClusterUpdateTags(){
         final ResourceModel previousTestResourceModel = getDesiredTestResourceModel();
         final ResourceModel desiredTestResourceModel = getDesiredTestResourceModel();
-        desiredTestResourceModel.setARN("clusterArn");
+        desiredTestResourceModel.setARN(CLUSTER_ARN);
         final ResourceHandlerRequest<ResourceModel> request =
                 buildRequest(desiredTestResourceModel, previousTestResourceModel);
         Set<Tag> newTags = Sets.newSet(Tag.builder().key("key").value("newValue").build(),
@@ -172,6 +172,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
         Set<Tag> oldTags = Sets.newSet(
                 Tag.builder().key("key").value("oldValue").build(),
                 Tag.builder().key("keyOld").value("value").build());
+
         request.setPreviousResourceTags(translateTagsToMap(oldTags));
         request.setDesiredResourceTags(translateTagsToMap(newTags));
         request.getDesiredResourceState().setTags(newTags);
@@ -183,7 +184,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
         final TagResourceResponse tagResourceResponse = TagResourceResponse.builder().tagList(translateTagsToSdk(request.getDesiredResourceState().getTags())).build();
         when(sdkClient.tagResource(any(TagResourceRequest.class))).thenReturn(tagResourceResponse);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.tagResource(proxy, proxyClient, ProgressEvent.progress(desiredTestResourceModel, new CallbackContext()), request);
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.tagResource(proxy, proxyClient, ProgressEvent.progress(desiredTestResourceModel, new CallbackContext()), request, logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
@@ -196,6 +197,8 @@ public class UpdateHandlerTest extends AbstractTestBase {
         verify(proxyClient.client()).listTags(any(ListTagsRequest.class));
         verify(proxyClient.client()).untagResource(any(UntagResourceRequest.class));
         verify(proxyClient.client()).tagResource(any(TagResourceRequest.class));
+
+        verify(sdkClient, atLeastOnce()).serviceName();
     }
 
 

@@ -1,16 +1,18 @@
 package software.amazon.memorydb.cluster;
 
 import static software.amazon.memorydb.cluster.Translator.mapToTags;
+import static software.amazon.memorydb.cluster.Translator.translateTagsFromSdk;
 
 import com.google.common.collect.Sets;
 import org.apache.commons.collections.CollectionUtils;
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
 import software.amazon.awssdk.services.memorydb.model.Cluster;
 import software.amazon.awssdk.services.memorydb.model.ClusterNotFoundException;
-import software.amazon.awssdk.services.memorydb.model.ListTagsResponse;
 import software.amazon.awssdk.services.memorydb.model.MemoryDbException;
 import software.amazon.awssdk.services.memorydb.model.InvalidParameterCombinationException;
 import software.amazon.awssdk.services.memorydb.model.InvalidParameterValueException;
+import software.amazon.awssdk.services.memorydb.model.TagResourceResponse;
+import software.amazon.awssdk.services.memorydb.model.UntagResourceResponse;
 import software.amazon.cloudformation.exceptions.CfnInternalFailureException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
@@ -20,7 +22,9 @@ import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public class UpdateHandler extends BaseHandlerStd {
@@ -45,8 +49,9 @@ public class UpdateHandler extends BaseHandlerStd {
                 .then(progress -> updateCluster(proxy, proxyClient, progress, request, ClusterUpdateFieldType.REPLICA_CONFIGURATION, logger))
                 .then(progress -> updateCluster(proxy, proxyClient, progress, request, ClusterUpdateFieldType.SHARD_CONFIGURATION, logger))
                 .then(progress -> updateCluster(proxy, proxyClient, progress, request, ClusterUpdateFieldType.ACL_NAME, logger))
-                .then(progress -> tagResource(proxy, proxyClient, progress, request))
-                .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+                .then(progress -> describeClusters(proxy, progress, proxyClient))
+                .then(progress -> tagResource(proxy, proxyClient, progress, request, logger))
+                .then(progress -> ProgressEvent.defaultSuccessHandler(progress.getResourceModel()));
     }
 
     ProgressEvent<ResourceModel, CallbackContext> updateCluster(final AmazonWebServicesClientProxy proxy,
@@ -166,13 +171,16 @@ public class UpdateHandler extends BaseHandlerStd {
     protected ProgressEvent<ResourceModel, CallbackContext> tagResource(final AmazonWebServicesClientProxy proxy,
                                                                         final ProxyClient<MemoryDbClient> proxyClient,
                                                                         final ProgressEvent<ResourceModel, CallbackContext> progress,
-                                                                        final ResourceHandlerRequest<ResourceModel> request) {
-        if(!isUpdateNeeded(request.getDesiredResourceTags(), request.getPreviousResourceTags()) || !isArnPresent(progress.getResourceModel())) {
-            return progress;
+                                                                        final ResourceHandlerRequest<ResourceModel> request,
+                                                                        final Logger logger) {
+        logger.log("Previous Resource Tags : " + request.getPreviousResourceTags());
+        logger.log("Desired Resource Tags : " + request.getDesiredResourceTags());
+        if (!isUpdateNeeded(request.getDesiredResourceTags(), request.getPreviousResourceTags()) || !isArnPresent(progress.getResourceModel())) {
+            logger.log("No tags to update.");
+            return listTags(proxy, progress, proxyClient);
         }
-        return progress
-                .then(o ->
-                        handleExceptions(() -> {
+
+        return progress.then(o -> handleExceptions(() -> {
                             tagResource(proxy, proxyClient,  progress.getResourceModel(), progress.getCallbackContext(), request.getDesiredResourceTags());
                             return ProgressEvent.progress(o.getResourceModel(), o.getCallbackContext()); })
                 );
@@ -185,24 +193,31 @@ public class UpdateHandler extends BaseHandlerStd {
                                                                       final Map<String, String> tags) {
         final String arn = model.getARN();
         final Set<Tag> currentTags = mapToTags(tags);
-        final Set<Tag> existingTags = listTags(proxyClient, arn);
+        final Set<Tag> existingTags = listTags(proxy, proxyClient, model, callbackContext);
         final Set<Tag> tagsToRemove = Sets.difference(existingTags, currentTags);
         final Set<Tag> tagsToAdd = Sets.difference(currentTags, existingTags);
 
         if (CollectionUtils.isNotEmpty(tagsToRemove)) {
-            proxy.injectCredentialsAndInvokeV2(Translator.translateToUntagResourceRequest(arn, tagsToRemove), proxyClient.client()::untagResource);
+            UntagResourceResponse untagResourceResponse = proxy.injectCredentialsAndInvokeV2(Translator.translateToUntagResourceRequest(arn, tagsToRemove), proxyClient.client()::untagResource);
+            model.setTags(translateTagsFromSdk(untagResourceResponse.tagList()));
         }
 
         if (CollectionUtils.isNotEmpty(tagsToAdd)) {
-            proxy.injectCredentialsAndInvokeV2(Translator.translateToTagResourceRequest(arn, tagsToAdd), proxyClient.client()::tagResource);
+            TagResourceResponse tagResourceResponse = proxy.injectCredentialsAndInvokeV2(Translator.translateToTagResourceRequest(arn, tagsToAdd), proxyClient.client()::tagResource);
+            model.setTags(translateTagsFromSdk(tagResourceResponse.tagList()));
         }
 
         return ProgressEvent.progress(model, callbackContext);
     }
 
-    protected Set<Tag> listTags(final ProxyClient<MemoryDbClient> proxyClient,
-                                final String arn) {
-        final ListTagsResponse listTagsResponse = proxyClient.injectCredentialsAndInvokeV2(Translator.translateToListTagsRequest(arn), proxyClient.client()::listTags);
-        return Translator.translateTagsFromSdk(listTagsResponse.tagList());
+    private Set<Tag> listTags(final AmazonWebServicesClientProxy proxy,
+                              final ProxyClient<MemoryDbClient> proxyClient,
+                              final ResourceModel model,
+                              final CallbackContext callbackContext) {
+        return Optional.ofNullable(ProgressEvent.progress(model, callbackContext)
+                .then(progress -> listTags(proxy, progress, proxyClient))
+                .getResourceModel()
+                .getTags())
+                .orElse(Collections.emptySet());
     }
 }

@@ -2,35 +2,38 @@
   "action": "UPDATE",
   "request": {
     "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
+    "Description": "CFN Test MemoryDB cluster updated",
     "desiredResourceTags": {
+      "k1": "v1OldKey",
+      "k2": "v2NewKey"
+    },
+    "previousResourceTags": {
       "k1": "v1",
       "service": "memorydb"
     },
-    "previousResourceTags": {
-      "k1": "vOld",
-      "k2": "vOld"
-    },
     "desiredResourceState": {
-      "ClusterName": "memdb-cfn-tst-clstr7"
+      "ClusterName": "mdb-2021-08-22-21-07-43-250-368569"
     },
     "previousResourceState": {
-      "ClusterName": "memdb-cfn-tst-clstr7",
-      "Description": "memdb cfn test cluster",
+      "ClusterName": "mdb-2021-08-22-21-07-43-250-368569",
+      "Description": "CFN Test MemoryDB cluster",
       "Status": "available",
       "NumberOfShards": 1,
       "ClusterEndpoint": {
-        "Address": "clustercfg.memdb-cfn-tst-clstr7.sh2qqx.memorydb-qa.us-east-1.amazonaws.com",
+        "Address": "clustercfg.mdb-2021-08-22-21-07-43-250-368569.nneedy.memorydb.ap-south-1.amazonaws.com",
         "Port": 6379
       },
       "NodeType": "db.r6g.large",
-      "EngineVersion": "6.0",
-      "ParameterGroupStatus": "applying",
-      "SubnetGroupName": "memorydbsubnetgroup",
+      "EngineVersion": "6.2",
+      "EnginePatchVersion": "6.2.4",
+      "ParameterGroupName": "default.memorydb-redis6",
+      "ParameterGroupStatus": "in-sync",
+      "SubnetGroupName": "default",
       "TLSEnabled": true,
-      "ARN": "arn:aws:memorydb:us-east-1:284439664318:cluster/memdb-cfn-tst-clstr7",
+      "ARN": "arn:aws:memorydb:ap-south-1:078013142495:cluster/mdb-2021-08-22-21-07-43-250-368569",
       "SnapshotRetentionLimit": 0,
-      "MaintenanceWindow": "fri:09:00-fri:10:00",
-      "SnapshotWindow": "03:30-04:30",
+      "MaintenanceWindow": "mon:20:00-mon:21:00",
+      "SnapshotWindow": "06:00-07:00",
       "ACLName": "open-access",
       "AutoMinorVersionUpgrade": true
     },

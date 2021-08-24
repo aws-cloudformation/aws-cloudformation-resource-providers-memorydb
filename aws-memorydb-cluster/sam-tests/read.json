@@ -3,7 +3,7 @@
   "request": {
     "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
     "desiredResourceState": {
-      "ClusterName": "memdb-cfn-tst-clstr-10"
+      "ClusterName": "mdb-2021-08-22-21-07-43-250-368569"
     },
     "logicalResourceIdentifier": "MyResource"
   },
