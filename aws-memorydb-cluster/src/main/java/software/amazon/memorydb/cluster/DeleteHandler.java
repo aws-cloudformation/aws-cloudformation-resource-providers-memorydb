@@ -2,16 +2,7 @@ package software.amazon.memorydb.cluster;
 
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
 import software.amazon.awssdk.services.memorydb.model.ClusterNotFoundException;
-import software.amazon.awssdk.services.memorydb.model.DeleteClusterRequest;
-import software.amazon.awssdk.services.memorydb.model.DeleteClusterResponse;
-import software.amazon.awssdk.services.memorydb.model.InvalidClusterStateException;
-import software.amazon.awssdk.services.memorydb.model.InvalidParameterCombinationException;
-import software.amazon.awssdk.services.memorydb.model.InvalidParameterValueException;
-import software.amazon.awssdk.services.memorydb.model.SnapshotAlreadyExistsException;
-import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
-import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
