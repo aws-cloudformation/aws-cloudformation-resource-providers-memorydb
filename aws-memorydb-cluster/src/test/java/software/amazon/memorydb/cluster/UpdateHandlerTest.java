@@ -1,6 +1,6 @@
 package software.amazon.memorydb.cluster;
 
-import static junit.framework.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
