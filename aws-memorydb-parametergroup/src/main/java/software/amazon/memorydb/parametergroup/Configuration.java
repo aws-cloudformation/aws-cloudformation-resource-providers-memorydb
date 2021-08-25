@@ -11,6 +11,7 @@ class Configuration extends BaseConfiguration {
         super("aws-memorydb-parametergroup.json");
     }
 
+    @Override
     public Map<String, String> resourceDefinedTags(final ResourceModel resourceModel) {
         if(CollectionUtils.isNullOrEmpty(resourceModel.getTags()))
             return null;

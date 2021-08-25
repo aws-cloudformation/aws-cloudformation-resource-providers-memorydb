@@ -1,34 +1,35 @@
 package software.amazon.memorydb.parametergroup;
 
 import static software.amazon.memorydb.parametergroup.Translator.mapToTags;
+import static software.amazon.memorydb.parametergroup.Translator.translateTagsFromSdk;
 
 import com.amazonaws.util.StringUtils;
 import com.google.common.collect.Sets;
+import org.apache.commons.collections.CollectionUtils;
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
 import software.amazon.awssdk.services.memorydb.model.Cluster;
 import software.amazon.awssdk.services.memorydb.model.DescribeClustersResponse;
 import software.amazon.awssdk.services.memorydb.model.DescribeParameterGroupsResponse;
 import software.amazon.awssdk.services.memorydb.model.DescribeParametersResponse;
-import software.amazon.awssdk.services.memorydb.model.InvalidParameterCombinationException;
-import software.amazon.awssdk.services.memorydb.model.InvalidParameterGroupStateException;
-import software.amazon.awssdk.services.memorydb.model.InvalidParameterValueException;
 import software.amazon.awssdk.services.memorydb.model.ListTagsResponse;
 import software.amazon.awssdk.services.memorydb.model.Parameter;
 import software.amazon.awssdk.services.memorydb.model.ParameterGroup;
 import software.amazon.awssdk.services.memorydb.model.ParameterGroupNotFoundException;
+import software.amazon.awssdk.services.memorydb.model.TagResourceResponse;
+import software.amazon.awssdk.services.memorydb.model.UntagResourceResponse;
 import software.amazon.cloudformation.exceptions.BaseHandlerException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
-import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
-import software.amazon.cloudformation.exceptions.CfnNotStabilizedException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
 import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,8 +45,9 @@ public class UpdateHandler extends BaseHandlerStd {
         return ProgressEvent.progress(desiredResourceState, callbackContext)
                 .then(progress -> updateParameterGroup(proxy, proxyClient, progress, request))
                 .then(progress -> waitForStabilize(proxy, proxyClient, progress, request))
-                .then(progress -> tagResource(proxy, proxyClient, progress, request))
-                .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));
+                .then(progress -> describeParameterGroups(proxy, progress, proxyClient))
+                .then(progress -> tagResource(proxy, proxyClient, progress, request, logger))
+                .then(progress -> ProgressEvent.defaultSuccessHandler(progress.getResourceModel()));
     }
 
     private boolean isUpdateNeeded(final Map<String, String> desiredResourceTags,
@@ -61,56 +63,54 @@ public class UpdateHandler extends BaseHandlerStd {
     protected ProgressEvent<ResourceModel, CallbackContext> tagResource(final AmazonWebServicesClientProxy proxy,
                                                                         final ProxyClient<MemoryDbClient> proxyClient,
                                                                         final ProgressEvent<ResourceModel, CallbackContext> progress,
-                                                                        final ResourceHandlerRequest<ResourceModel> request) {
-
-        if (!isUpdateNeeded(request.getDesiredResourceTags(), request.getPreviousResourceTags())) {
-            return progress;
+                                                                        final ResourceHandlerRequest<ResourceModel> request,
+                                                                        final Logger logger) {
+        logger.log("Previous Resource Tags : " + request.getPreviousResourceTags());
+        logger.log("Desired Resource Tags : " + request.getDesiredResourceTags());
+        if (!isUpdateNeeded(request.getDesiredResourceTags(), request.getPreviousResourceTags()) || !isArnPresent(progress.getResourceModel())) {
+            logger.log("No tags to update.");
+            return listTags(proxy, progress, proxyClient);
         }
-        return describeClusterParameterGroup(proxy, proxyClient, progress.getResourceModel(), progress.getCallbackContext())
-                .done((paramGroupRequest, paramGroupResponse, rdsProxyClient, resourceModel, cxt) ->
-                        tagResource(paramGroupResponse, proxyClient, resourceModel, cxt, request.getDesiredResourceTags()));
 
+        return progress.then(o -> handleExceptions(() -> {
+            tagResource(proxy, proxyClient,  progress.getResourceModel(), progress.getCallbackContext(), request.getDesiredResourceTags());
+            return ProgressEvent.progress(o.getResourceModel(), o.getCallbackContext()); })
+        );
     }
 
-    private ProgressEvent<ResourceModel, CallbackContext> tagResource(final DescribeParameterGroupsResponse describeParameterGroupsResponse,
+    private ProgressEvent<ResourceModel, CallbackContext> tagResource(final AmazonWebServicesClientProxy proxy,
                                                                       final ProxyClient<MemoryDbClient> proxyClient,
                                                                       final ResourceModel model,
                                                                       final CallbackContext callbackContext,
                                                                       final Map<String, String> tags) {
-
-        final String arn = describeParameterGroupsResponse.parameterGroups().stream().findFirst().get().arn();
+        final String arn = model.getARN();
         final Set<Tag> currentTags = mapToTags(tags);
-        final Set<Tag> existingTags = listTags(proxyClient, arn);
+        final Set<Tag> existingTags = listTags(proxy, proxyClient, model, callbackContext);
         final Set<Tag> tagsToRemove = Sets.difference(existingTags, currentTags);
         final Set<Tag> tagsToAdd = Sets.difference(currentTags, existingTags);
 
-        try {
-            if (tagsToRemove != null && !tagsToRemove.isEmpty()) {
-                proxyClient.injectCredentialsAndInvokeV2(Translator.translateToUntagResourceRequest(arn, tagsToRemove), proxyClient.client()::untagResource);
-            }
-
-            if (tagsToAdd != null && !tagsToAdd.isEmpty()) {
-                proxyClient.injectCredentialsAndInvokeV2(Translator.translateToTagResourceRequest(arn, tagsToAdd), proxyClient.client()::tagResource);
-            }
-
-            return ProgressEvent.progress(model, callbackContext);
-        } catch (ParameterGroupNotFoundException e) {
-            throw new CfnNotFoundException(e);
-        } catch (Exception e) {
-            throw new CfnGeneralServiceException(e);
+        if (CollectionUtils.isNotEmpty(tagsToRemove)) {
+            UntagResourceResponse untagResourceResponse = proxy.injectCredentialsAndInvokeV2(Translator.translateToUntagResourceRequest(arn, tagsToRemove), proxyClient.client()::untagResource);
+            model.setTags(translateTagsFromSdk(untagResourceResponse.tagList()));
         }
+
+        if (CollectionUtils.isNotEmpty(tagsToAdd)) {
+            TagResourceResponse tagResourceResponse = proxy.injectCredentialsAndInvokeV2(Translator.translateToTagResourceRequest(arn, tagsToAdd), proxyClient.client()::tagResource);
+            model.setTags(translateTagsFromSdk(tagResourceResponse.tagList()));
+        }
+
+        return ProgressEvent.progress(model, callbackContext);
     }
 
-    protected Set<Tag> listTags(final ProxyClient<MemoryDbClient> proxyClient,
-                                final String arn) {
-        try {
-            final ListTagsResponse listTagsResponse = proxyClient.injectCredentialsAndInvokeV2(Translator.translateToListTagsRequest(arn), proxyClient.client()::listTags);
-            return Translator.translateTagsFromSdk(listTagsResponse.tagList());
-        } catch (ParameterGroupNotFoundException e) {
-            throw new CfnNotFoundException(e);
-        } catch (Exception e) {
-            throw new CfnGeneralServiceException(e);
-        }
+    private Set<Tag> listTags(final AmazonWebServicesClientProxy proxy,
+                              final ProxyClient<MemoryDbClient> proxyClient,
+                              final ResourceModel model,
+                              final CallbackContext callbackContext) {
+        return Optional.ofNullable(ProgressEvent.progress(model, callbackContext)
+                .then(progress -> listTags(proxy, progress, proxyClient))
+                .getResourceModel()
+                .getTags())
+                .orElse(Collections.emptySet());
     }
 
     protected ProgressEvent<ResourceModel, CallbackContext> waitForStabilize(final AmazonWebServicesClientProxy proxy,
@@ -152,7 +152,6 @@ public class UpdateHandler extends BaseHandlerStd {
         } catch (final Exception e) {
             throw new CfnGeneralServiceException(e);
         }
-
     }
 
     protected ProgressEvent<ResourceModel, CallbackContext> updateParameterGroup(final AmazonWebServicesClientProxy proxy,
@@ -193,24 +192,11 @@ public class UpdateHandler extends BaseHandlerStd {
             return proxy.initiate("AWS-memorydb-ParameterGroup::Update", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                     .translateToServiceRequest(model -> Translator.translateToUpdateRequest(model, finalParamsToUpdate))
                     .backoffDelay(STABILIZATION_DELAY)
-                    .makeServiceCall((awsRequest, proxyInvocation) -> {
-                        try {
-                            return proxyInvocation.injectCredentialsAndInvokeV2(awsRequest, proxyInvocation.client()::updateParameterGroup);
-                        } catch (final ParameterGroupNotFoundException e) {
-                            throw new CfnNotFoundException(e);
-                        } catch (final InvalidParameterValueException | InvalidParameterCombinationException e) {
-                            throw new CfnInvalidRequestException(e);
-                        } catch (final InvalidParameterGroupStateException e) {
-                            throw new CfnNotStabilizedException(e);
-                        } catch (final Exception e) {
-                            throw e;
-                        }
-                    })
+                    .makeServiceCall((awsRequest, proxyInvocation) -> handleExceptions(() -> proxyInvocation.injectCredentialsAndInvokeV2(awsRequest, proxyInvocation.client()::updateParameterGroup)))
                     .progress();
+        } catch (BaseHandlerException e) {
+            throw e;
         } catch (final Exception e) {
-            if (e instanceof BaseHandlerException) {
-                throw e;
-            }
             throw new CfnGeneralServiceException(e);
         }
     }

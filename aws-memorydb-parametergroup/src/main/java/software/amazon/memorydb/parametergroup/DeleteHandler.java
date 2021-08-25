@@ -23,17 +23,7 @@ public class DeleteHandler extends BaseHandlerStd {
                                                                           final Logger logger) {
         return proxy.initiate("AWS-memorydb-ParameterGroup::Delete", proxyClient, request.getDesiredResourceState(), callbackContext)
                 .translateToServiceRequest(Translator::translateToDeleteRequest)
-                .makeServiceCall((awsRequest, client) -> {
-                    try {
-                        return client.injectCredentialsAndInvokeV2(awsRequest, client.client()::deleteParameterGroup);
-                    } catch (ParameterGroupNotFoundException e) {
-                        throw new CfnNotFoundException(e);
-                    } catch (final InvalidParameterValueException | InvalidParameterCombinationException | InvalidParameterGroupStateException e)
-                    {
-                        throw new CfnInvalidRequestException(e);
-                    } catch (final Exception e) {
-                        throw new CfnGeneralServiceException(e);
-                    }
-                }).done((deleteGroupRequest, deleteGroupResponse, proxyInvocation, resourceModel, context) -> ProgressEvent.defaultSuccessHandler(null));
+                .makeServiceCall((awsRequest, client) -> handleExceptions(() -> client.injectCredentialsAndInvokeV2(awsRequest, client.client()::deleteParameterGroup)))
+                .done((deleteGroupRequest, deleteGroupResponse, proxyInvocation, resourceModel, context) -> ProgressEvent.defaultSuccessHandler(null));
     }
 }

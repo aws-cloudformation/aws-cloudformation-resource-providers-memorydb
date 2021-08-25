@@ -123,7 +123,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
 
         verify(proxyClient.client()).updateParameterGroup(any(UpdateParameterGroupRequest.class));
         verify(proxyClient.client()).describeParameterGroups(any(DescribeParameterGroupsRequest.class));
-        verify(proxyClient.client(), times(2)).listTags(any(ListTagsRequest.class));
+        verify(proxyClient.client()).listTags(any(ListTagsRequest.class));
         verify(proxyClient.client()).tagResource(any(TagResourceRequest.class));
         verify(sdkClient, atLeastOnce()).serviceName();
     }
@@ -309,18 +309,15 @@ public class UpdateHandlerTest extends AbstractTestBase {
         requestUpdTags.setPreviousResourceTags(translateTagsToMap(oldTags));
         requestUpdTags.getDesiredResourceState().setTags(newTags);
 
-        final DescribeParameterGroupsResponse describeParameterGroupsResponse = DescribeParameterGroupsResponse.builder()
-                .parameterGroups(getTestParameterGroup()).build();
-        when(sdkClient.describeParameterGroups(any(DescribeParameterGroupsRequest.class))).thenReturn(describeParameterGroupsResponse);
         final ListTagsResponse listTagsResponse = ListTagsResponse.builder()
                 .tagList(translateTagsToSdk(oldTags)).build();
         when(proxyClient.client().listTags(any(ListTagsRequest.class))).thenReturn(listTagsResponse);
         final UntagResourceResponse untagResourceResponse = UntagResourceResponse.builder().build();
         when(sdkClient.untagResource(any(UntagResourceRequest.class))).thenReturn(untagResourceResponse);
-        final TagResourceResponse tagResourceResponse = TagResourceResponse.builder().tagList(translateTagsToSdk(requestSameParams.getDesiredResourceState().getTags())).build();
+        final TagResourceResponse tagResourceResponse = TagResourceResponse.builder().tagList(translateTagsToSdk(requestUpdTags.getDesiredResourceState().getTags())).build();
         when(sdkClient.tagResource(any(TagResourceRequest.class))).thenReturn(tagResourceResponse);
 
-        final ProgressEvent<ResourceModel, CallbackContext> response = handler.tagResource(proxy, proxyClient, ProgressEvent.progress(RESOURCE_MODEL, callbackContext), requestSameParams);
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.tagResource(proxy, proxyClient, ProgressEvent.progress(RESOURCE_MODEL, callbackContext), requestUpdTags, logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.IN_PROGRESS);
@@ -332,7 +329,6 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
 
-        verify(proxyClient.client()).describeParameterGroups(any(DescribeParameterGroupsRequest.class));
         verify(proxyClient.client()).listTags(any(ListTagsRequest.class));
         verify(proxyClient.client()).untagResource(any(UntagResourceRequest.class));
         verify(proxyClient.client()).tagResource(any(TagResourceRequest.class));
