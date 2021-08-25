@@ -48,7 +48,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 #### Family
 
-The engine and version family for the parameter group.
+The name of the parameter group family that this parameter group is compatible with.
 
 _Required_: No
 
@@ -58,7 +58,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 #### Description
 
-A user supplied description for the parameter group.
+A description of the parameter group.
 
 _Required_: No
 

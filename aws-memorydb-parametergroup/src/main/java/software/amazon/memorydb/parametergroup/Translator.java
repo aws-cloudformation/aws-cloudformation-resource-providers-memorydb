@@ -75,8 +75,13 @@ public class Translator {
     return DescribeParameterGroupsRequest.builder().parameterGroupName(model.getName()).build();
   }
 
-  static ListTagsRequest translateToListTagsRequest(final ParameterGroup parameterGroup) {
-    return translateToListTagsRequest(parameterGroup.arn());
+  /**
+   * Request to list tags on a resource
+   * @param model
+   * @return
+   */
+  static ListTagsRequest translateToListTagsRequest(final ResourceModel model) {
+    return translateToListTagsRequest(model.getARN());
   }
 
   static ListTagsRequest translateToListTagsRequest(final String arn) {
@@ -139,7 +144,10 @@ public class Translator {
   }
 
   public static DescribeClustersRequest translateToDescribeClustersRequest(String token) {
-    return DescribeClustersRequest.builder().nextToken(token).build();
+    return DescribeClustersRequest.builder()
+            .nextToken(token)
+            .maxResults(MAX_RECORDS_TO_DESCRIBE)
+            .build();
   }
 
   static Set<software.amazon.memorydb.parametergroup.Tag> mapToTags(final Map<String, String> tags) {
@@ -190,5 +198,12 @@ public class Translator {
 
   public static DescribeParametersRequest translateToDescribeParametersRequest(String parameterGroupName, String nextToken) {
     return DescribeParametersRequest.builder().parameterGroupName(parameterGroupName).maxResults(MAX_RECORDS_TO_DESCRIBE).nextToken(nextToken).build();
+  }
+
+  static Set<software.amazon.memorydb.parametergroup.Tag> translateTags(final Collection<Tag> tags) {
+    return Optional.ofNullable(tags).orElse(Collections.emptySet())
+            .stream()
+            .map(tag -> software.amazon.memorydb.parametergroup.Tag.builder().key(tag.key()).value(tag.value()).build())
+            .collect(Collectors.toSet());
   }
 }

@@ -2,7 +2,8 @@
     "Name": "cfncontractcparametergroup1",
     "Parameters": {
         "maxmemory-policy": "volatile-random",
-        "proto-max-bulk-len": "1048576"
+        "timeout": "20",
+        "lazyfree-lazy-eviction": "yes"
     },
     "Tags": [
         {
