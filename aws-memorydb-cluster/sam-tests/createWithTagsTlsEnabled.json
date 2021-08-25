@@ -1,22 +1,22 @@
 {
-  "action": "CREATE",
-  "request": {
-    "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
-    "desiredResourceState": {
-      "ClusterName": "memdb-cfn-tst-clstr-tags-1",
-      "Description": "memdb cfn test cluster",
-      "NodeType": "db.r6g.large",
-      "NumShards": 1,
-      "NumReplicasPerShard": 1,
-      "SubnetGroupName": "memorydbsubnetgroup",
-      "TLSEnabled": true,
-      "KmsKeyId": "40aa6087-376f-4b97-82d4-f2a1485ea6e9"
+    "action": "CREATE",
+    "request": {
+        "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
+        "desiredResourceState": {
+            "ClusterName": "memdb-cfn-tst-clstr-tags-1",
+            "Description": "memdb cfn test cluster",
+            "NodeType": "db.r6g.large",
+            "NumShards": 1,
+            "NumReplicasPerShard": 1,
+            "SubnetGroupName": "memorydbsubnetgroup",
+            "TLSEnabled": true,
+            "KmsKeyId": "40aa6087-376f-4b97-82d4-f2a1485ea6e9"
+        },
+        "desiredResourceTags": {
+            "k1": "v1",
+            "service": "memorydb"
+        },
+        "logicalResourceIdentifier": "MyResource"
     },
-    "desiredResourceTags": {
-      "k1": "v1",
-      "service": "memorydb"
-    },
-    "logicalResourceIdentifier": "MyResource"
-  },
-  "callbackContext": null
+    "callbackContext": null
 }

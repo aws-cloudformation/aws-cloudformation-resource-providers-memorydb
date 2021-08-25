@@ -1,7 +1,7 @@
 {
-  "ClusterName": "cfncontractinvalid",
-  "NodeType": "db.r6g.large",
-  "NumShards": 1,
-  "NumReplicasPerShard": 1,
-  "ACLName": "open-access"
+    "ClusterName": "cfncontractinvalid",
+    "NodeType": "db.r6g.large",
+    "NumShards": 1,
+    "NumReplicasPerShard": 1,
+    "ACLName": "open-access"
 }
