@@ -1,11 +1,11 @@
 {
-  "action": "DELETE",
-  "request": {
-    "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
-    "desiredResourceState": {
-      "ClusterName": "memdb-cfn-tst-clstr"
+    "action": "DELETE",
+    "request": {
+        "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
+        "desiredResourceState": {
+            "ClusterName": "memdb-cfn-tst-clstr"
+        },
+        "logicalResourceIdentifier": "MyResource"
     },
-    "logicalResourceIdentifier": "MyResource"
-  },
-  "callbackContext": null
+    "callbackContext": null
 }
