@@ -81,7 +81,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         final DescribeParameterGroupsResponse describeParameterGroupsResponse = DescribeParameterGroupsResponse.builder()
                 .parameterGroups(ParameterGroup.builder()
                         .arn(RESOURCE_MODEL.getARN())
-                        .name(RESOURCE_MODEL.getName())
+                        .name(RESOURCE_MODEL.getParameterGroupName())
                         .family(RESOURCE_MODEL.getFamily())
                         .description(RESOURCE_MODEL.getDescription()).build()).build();
         when(proxyClient.client().describeParameterGroups(any(DescribeParameterGroupsRequest.class))).thenReturn(describeParameterGroupsResponse);

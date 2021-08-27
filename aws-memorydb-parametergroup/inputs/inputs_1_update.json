@@ -1,5 +1,5 @@
 {
-    "Name": "cfncontractcparametergroup1",
+    "ParameterGroupName": "cfncontractcparametergroup2",
     "Parameters": {
         "maxmemory-policy": "volatile-random",
         "timeout": "20",

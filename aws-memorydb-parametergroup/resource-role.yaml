@@ -25,6 +25,7 @@ Resources:
                 Action:
                 - "memorydb:CreateParameterGroup"
                 - "memorydb:DeleteParameterGroup"
+                - "memorydb:DescribeClusters"
                 - "memorydb:DescribeParameterGroups"
                 - "memorydb:DescribeParameters"
                 - "memorydb:ListTags"

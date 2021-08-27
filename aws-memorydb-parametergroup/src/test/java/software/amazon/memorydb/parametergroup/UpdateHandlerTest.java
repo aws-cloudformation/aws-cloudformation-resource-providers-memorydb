@@ -136,7 +136,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
         callbackContext.setClusterStabilized(false);
 
         final Cluster cluster = Cluster.builder()
-                .parameterGroupName(RESOURCE_MODEL.getName())
+                .parameterGroupName(RESOURCE_MODEL.getParameterGroupName())
                 .parameterGroupStatus("in-sync").build();
 
         final DescribeClustersResponse describeClustersResponse = DescribeClustersResponse.builder()
@@ -168,7 +168,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
         callbackContext.setClusterStabilized(false);
 
         final Cluster cluster = Cluster.builder()
-                .parameterGroupName(RESOURCE_MODEL.getName())
+                .parameterGroupName(RESOURCE_MODEL.getParameterGroupName())
                 .parameterGroupStatus("in-sync").build();
 
         final DescribeClustersResponse describeClustersResponse = DescribeClustersResponse.builder()
@@ -199,7 +199,7 @@ public class UpdateHandlerTest extends AbstractTestBase {
         callbackContext.setClusterStabilized(false);
 
         final Cluster cluster = Cluster.builder()
-                .parameterGroupName(RESOURCE_MODEL.getName())
+                .parameterGroupName(RESOURCE_MODEL.getParameterGroupName())
                 .parameterGroupStatus("applying").build();
 
         final DescribeClustersResponse describeClustersResponse = DescribeClustersResponse.builder()

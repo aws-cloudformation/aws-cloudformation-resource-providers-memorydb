@@ -33,10 +33,10 @@ public class CreateHandler extends BaseHandlerStd {
         final ResourceModel desiredResourceState = request.getDesiredResourceState();
 
         try {
-            Validate.isTrue(desiredResourceState.getName() != null, NAME_REQUIRED_FOR_PARAMETER_GROUP);
+            Validate.isTrue(desiredResourceState.getParameterGroupName() != null, NAME_REQUIRED_FOR_PARAMETER_GROUP);
             Validate.isTrue(desiredResourceState.getFamily() != null, FAMILY_REQUIRED_FOR_PARAMETER_GROUP);
 
-            if (!desiredResourceState.getName().matches("[a-z][a-z0-9\\\\-]*")) {
+            if (!desiredResourceState.getParameterGroupName().matches("[a-z][a-z0-9\\\\-]*")) {
                 throw new CfnInvalidRequestException(ID_WRONG_FORMAT);
             }
 
