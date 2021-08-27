@@ -47,7 +47,7 @@ public class AbstractTestBase {
   }
 
   static ResourceModel getDesiredTestResourceModel() {
-    return ResourceModel.builder().name(NAME).description(DESCRIPTION).aRN(ARN).family(FAMILY).tags(TAG_SET).build();
+    return ResourceModel.builder().parameterGroupName(NAME).description(DESCRIPTION).aRN(ARN).family(FAMILY).tags(TAG_SET).build();
   }
 
   static ParameterGroup getTestParameterGroup() {

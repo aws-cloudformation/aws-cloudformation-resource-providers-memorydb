@@ -8,10 +8,10 @@
             }
         },
         "desiredResourceState": {
-            "Name": "memdb-cfn-tst-pgrp-1",
+            "ParameterGroupName": "memdb-cfn-tst-pgrp-1",
             "Parameters": {
                 "maxmemory-policy": "volatile-random",
-                "proto-max-bulk-len": "1048576"
+                "timeout": "20"
             }
         },
         "previousResourceTags": {

@@ -60,7 +60,7 @@ public class Translator {
    */
   static CreateParameterGroupRequest translateToCreateRequest(final ResourceModel model, Map<String, String> tags) {
     return CreateParameterGroupRequest.builder()
-            .parameterGroupName(model.getName())
+            .parameterGroupName(model.getParameterGroupName())
             .description(model.getDescription())
             .family(model.getFamily())
             .tags(translateTagsToSdk(tags)).build();
@@ -72,7 +72,7 @@ public class Translator {
    * @return awsRequest the aws service request to describe a resource
    */
   static DescribeParameterGroupsRequest translateToReadRequest(final ResourceModel model) {
-    return DescribeParameterGroupsRequest.builder().parameterGroupName(model.getName()).build();
+    return DescribeParameterGroupsRequest.builder().parameterGroupName(model.getParameterGroupName()).build();
   }
 
   /**
@@ -98,7 +98,7 @@ public class Translator {
   }
   static ResourceModel translateFromReadResponse(final ParameterGroup parameterGroup) {
     return ResourceModel.builder()
-            .name(parameterGroup.name())
+            .parameterGroupName(parameterGroup.name())
             .aRN(parameterGroup.arn())
             .description(parameterGroup.description())
             .family(parameterGroup.family())
@@ -111,7 +111,7 @@ public class Translator {
    * @return awsRequest the aws service request to delete a resource
    */
   static DeleteParameterGroupRequest translateToDeleteRequest(final ResourceModel model) {
-    return DeleteParameterGroupRequest.builder().parameterGroupName(model.getName()).build();
+    return DeleteParameterGroupRequest.builder().parameterGroupName(model.getParameterGroupName()).build();
   }
 
 
@@ -136,7 +136,7 @@ public class Translator {
   }
 
   public static UpdateParameterGroupRequest translateToUpdateRequest(ResourceModel resourceModel, List<Parameter> params) {
-    return UpdateParameterGroupRequest.builder().parameterGroupName(resourceModel.getName())
+    return UpdateParameterGroupRequest.builder().parameterGroupName(resourceModel.getParameterGroupName())
             .parameterNameValues(params != null ? params.stream()
                     .map(kv -> ParameterNameValue.builder().parameterName(kv.name()).parameterValue(kv.value()).build())
                     .collect(Collectors.toList()) : null)

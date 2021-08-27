@@ -30,7 +30,7 @@
         }
     },
     "properties": {
-        "Name": {
+        "ParameterGroupName": {
             "description": "The name of the parameter group.",
             "type": "string"
         },
@@ -63,7 +63,7 @@
     },
     "additionalProperties": false,
     "required": [
-        "Name"
+        "ParameterGroupName"
     ],
     "readOnlyProperties": [
         "/properties/ARN"
@@ -72,12 +72,12 @@
         "/properties/Parameters"
     ],
     "createOnlyProperties": [
-        "/properties/Name",
+        "/properties/ParameterGroupName",
         "/properties/Family",
         "/properties/Description"
     ],
     "primaryIdentifier": [
-        "/properties/Name"
+        "/properties/ParameterGroupName"
     ],
     "handlers": {
         "create": {
@@ -98,6 +98,7 @@
                 "memorydb:UpdateParameterGroup",
                 "memorydb:DescribeParameterGroups",
                 "memorydb:DescribeParameters",
+                "memorydb:DescribeClusters",
                 "memorydb:ListTags",
                 "memorydb:TagResource",
                 "memorydb:UntagResource"

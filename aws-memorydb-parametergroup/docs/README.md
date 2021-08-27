@@ -12,7 +12,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 {
     "Type" : "AWS::MemoryDB::ParameterGroup",
     "Properties" : {
-        "<a href="#name" title="Name">Name</a>" : <i>String</i>,
+        "<a href="#parametergroupname" title="ParameterGroupName">ParameterGroupName</a>" : <i>String</i>,
         "<a href="#family" title="Family">Family</a>" : <i>String</i>,
         "<a href="#description" title="Description">Description</a>" : <i>String</i>,
         "<a href="#tags" title="Tags">Tags</a>" : <i>[ <a href="tag.md">Tag</a>, ... ]</i>,
@@ -26,7 +26,7 @@ To declare this entity in your AWS CloudFormation template, use the following sy
 <pre>
 Type: AWS::MemoryDB::ParameterGroup
 Properties:
-    <a href="#name" title="Name">Name</a>: <i>String</i>
+    <a href="#parametergroupname" title="ParameterGroupName">ParameterGroupName</a>: <i>String</i>
     <a href="#family" title="Family">Family</a>: <i>String</i>
     <a href="#description" title="Description">Description</a>: <i>String</i>
     <a href="#tags" title="Tags">Tags</a>: <i>
@@ -36,7 +36,7 @@ Properties:
 
 ## Properties
 
-#### Name
+#### ParameterGroupName
 
 The name of the parameter group.
 
@@ -90,7 +90,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 ### Ref
 
-When you pass the logical ID of this resource to the intrinsic `Ref` function, Ref returns the Name.
+When you pass the logical ID of this resource to the intrinsic `Ref` function, Ref returns the ParameterGroupName.
 
 ### Fn::GetAtt
 

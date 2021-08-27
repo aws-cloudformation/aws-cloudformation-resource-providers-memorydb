@@ -73,7 +73,7 @@ public class ListHandlerTest extends AbstractTestBase {
         assertThat(response.getErrorCode()).isNull();
         assertThat(response.getNextToken()).isEqualTo("TEST_MARKER");
 
-        assertThat(response.getResourceModels().get(0).getName()).isEqualTo(request.getDesiredResourceState().getName());
+        assertThat(response.getResourceModels().get(0).getParameterGroupName()).isEqualTo(request.getDesiredResourceState().getParameterGroupName());
         assertThat(response.getResourceModels().get(0)).isEqualTo(expectedResourceModel);
     }
 }
