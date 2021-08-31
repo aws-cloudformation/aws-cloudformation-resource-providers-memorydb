@@ -1,0 +1,20 @@
+{
+    "UserName": "user-contract-123456789",
+    "AccessString": "+get ~keys*",
+    "AuthenticationMode": {
+        "Type": "password",
+        "Passwords": [
+            "sasadasdsadadas2313123asdasd"
+        ]
+    },
+    "Tags": [
+        {
+            "Key": "k1",
+            "Value": "v1"
+        },
+        {
+            "Key": "service",
+            "Value": "memorydb"
+        }
+    ]
+}

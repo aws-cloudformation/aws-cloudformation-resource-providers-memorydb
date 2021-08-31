@@ -1,0 +1,17 @@
+{
+    "action": "CREATE",
+    "request": {
+        "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa411dfes",
+        "desiredResourceState": {
+            "ParameterGroupName": "memdb-cfn-tst-pgrp-1",
+            "Family": "memorydb_redis6",
+            "Description": "memdb cfn test parameter-group"
+        },
+        "desiredResourceTags": {
+            "resource": "parameter-group",
+            "service": "memorydb"
+        },
+        "logicalResourceIdentifier": "MyResource"
+    },
+    "callbackContext": null
+}

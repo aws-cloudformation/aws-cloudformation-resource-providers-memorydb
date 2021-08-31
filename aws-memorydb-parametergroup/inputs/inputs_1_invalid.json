@@ -1,0 +1,5 @@
+{
+    "ParameterGroupName": "cfncontractinvalid",
+    "Family": "memorydb_redis6",
+    "Description": "memdb cfn test parameter-group"
+}
