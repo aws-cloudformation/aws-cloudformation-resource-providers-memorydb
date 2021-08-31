@@ -1,0 +1,18 @@
+{
+    "ParameterGroupName": "cfncontractcparametergroup2",
+    "Parameters": {
+        "maxmemory-policy": "volatile-random",
+        "timeout": "20",
+        "lazyfree-lazy-eviction": "yes"
+    },
+    "Tags": [
+        {
+            "Key": "k1",
+            "Value": "v1"
+        },
+        {
+            "Key": "service",
+            "Value": "memorydb"
+        }
+    ]
+}
