@@ -7,8 +7,8 @@ import software.amazon.awssdk.services.memorydb.model.InvalidParameterCombinatio
 import software.amazon.awssdk.services.memorydb.model.InvalidParameterValueException;
 import software.amazon.awssdk.services.memorydb.model.SubnetGroup;
 import software.amazon.awssdk.services.memorydb.model.SubnetGroupAlreadyExistsException;
-import software.amazon.awssdk.services.memorydb.model.SubnetGroupNotFoundException;
 import software.amazon.awssdk.services.memorydb.model.SubnetGroupInUseException;
+import software.amazon.awssdk.services.memorydb.model.SubnetGroupNotFoundException;
 import software.amazon.cloudformation.exceptions.BaseHandlerException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
@@ -72,7 +72,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
                                                                                             final ProxyClient<MemoryDbClient> proxyClient,
                                                                                             final ProgressEvent<ResourceModel, CallbackContext> progress) {
 
-    return proxy.initiate("AWS-MemoryDB-SubnetGroup::stabilizeCluster", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
+    return proxy.initiate("AWS-MemoryDB-SubnetGroup::stabilizeSubnetGroup", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
             .translateToServiceRequest(Function.identity()).backoffDelay(STABILIZATION_DELAY).makeServiceCall(EMPTY_CALL)
             .stabilize((resourceModel, response, client, model, callbackContext) -> isStabilized(proxy, client, model)).progress();
   }

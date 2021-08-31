@@ -1,7 +1,5 @@
 package software.amazon.memorydb.subnetgroup;
 
-import com.google.common.collect.Lists;
-import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.services.memorydb.model.CreateSubnetGroupRequest;
 import software.amazon.awssdk.services.memorydb.model.DeleteSubnetGroupRequest;
 import software.amazon.awssdk.services.memorydb.model.DescribeSubnetGroupsRequest;
@@ -138,7 +136,7 @@ public class Translator {
         builder.subnetIds(model.getSubnetIds());
         break;
       default:
-        throw new RuntimeException("Unknown ClusterUpdateFieldType " + fieldType);
+        throw new RuntimeException("Unknown SubnetGroupUpdateFieldType " + fieldType);
 
     }
     return builder.build();
