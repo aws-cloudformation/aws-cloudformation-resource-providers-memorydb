@@ -1,0 +1,9 @@
+{
+    "SubnetGroupName": "test-cfn-create-contract-test-invalid",
+    "Description": "testing cfn",
+    "SubnetIds": [
+        "subnet-899475a8",
+        "subnet-78f25835",
+        "subnet-e9ad4ab6"
+    ]
+}
