@@ -1,7 +1,10 @@
 {
     "SubnetGroupName": "test-cfn-create-contract-test",
     "Description": "testing cfn update test",
-    "SubnetIds": ["subnet-899475a8","subnet-78f25835"],
+    "SubnetIds": [
+        "subnet-899475a8",
+        "subnet-78f25835"
+    ],
     "Tags": [
         {
             "Key": "k1",

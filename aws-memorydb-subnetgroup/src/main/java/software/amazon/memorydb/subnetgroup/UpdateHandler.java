@@ -154,30 +154,6 @@ public class UpdateHandler extends BaseHandlerStd {
                 .backoffDelay(STABILIZATION_DELAY)
                 .makeServiceCall((awsRequest, memoryDbClientProxyClient) -> handleExceptions(() ->
                         memoryDbClientProxyClient.injectCredentialsAndInvokeV2(awsRequest, memoryDbClientProxyClient.client()::updateSubnetGroup)))
-                .stabilize((awsRequest, awsResponse, client, model, context) -> {
-                    try {
-                        final SubnetGroup subnetGroup = getSubnetGroup(proxy, client, model);
-                        boolean isStabilized = (subnetGroup != null && subnetGroup.name().equalsIgnoreCase(model.getSubnetGroupName()));
-                        if (isStabilized == false) {
-                            return false;
-                        }
-                        final ResourceModel postUpdateResourceState = Translator.translateFromDescribeSubnetGroupResponse(subnetGroup);
-                        if (isUpdateNeeded(desiredResourceState, postUpdateResourceState, fieldType, logger)) {
-                            /* Resource has been stabilized, however update operation has not been completed.
-                             * This is possible, since an update operation can fail to service failures (Example: requested
-                             * node type is not currently available).
-                             */
-                            throw MemoryDbException.builder().message(UPDATE_FAILED_WITH_STABILIZATION_SUCCESS).build();
-                        }
-                        return true;
-                    } catch (final SubnetGroupNotFoundException e) {
-                        throw new CfnNotFoundException(e);
-                    } catch (final InvalidParameterValueException | InvalidParameterCombinationException e) {
-                        throw new CfnInvalidRequestException(e);
-                    } catch (final Exception e) {
-                        throw e;
-                    }
-                })
                 .progress();
     }
 }

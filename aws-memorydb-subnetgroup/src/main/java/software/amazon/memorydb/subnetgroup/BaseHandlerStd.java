@@ -2,13 +2,13 @@ package software.amazon.memorydb.subnetgroup;
 
 import org.apache.commons.collections.CollectionUtils;
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
-import software.amazon.awssdk.services.memorydb.model.ClusterNotFoundException;
 import software.amazon.awssdk.services.memorydb.model.DescribeSubnetGroupsResponse;
 import software.amazon.awssdk.services.memorydb.model.InvalidParameterCombinationException;
 import software.amazon.awssdk.services.memorydb.model.InvalidParameterValueException;
 import software.amazon.awssdk.services.memorydb.model.SubnetGroup;
 import software.amazon.awssdk.services.memorydb.model.SubnetGroupAlreadyExistsException;
 import software.amazon.awssdk.services.memorydb.model.SubnetGroupNotFoundException;
+import software.amazon.awssdk.services.memorydb.model.SubnetGroupInUseException;
 import software.amazon.cloudformation.exceptions.BaseHandlerException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnGeneralServiceException;
@@ -57,6 +57,8 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
       throw new CfnInvalidRequestException(e);
     } catch (final SubnetGroupAlreadyExistsException e) {
       throw new CfnAlreadyExistsException(e);
+    } catch (final SubnetGroupInUseException e) {
+      throw new CfnNotStabilizedException(e);
     } catch (final SubnetGroupNotFoundException e) {
       throw new CfnNotFoundException(e);
     } catch (final BaseHandlerException e) {
@@ -81,7 +83,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
     try {
       final SubnetGroup subnetGroup = getSubnetGroup(proxy, client, model);
       return subnetGroup != null;
-    } catch (ClusterNotFoundException e) {
+    } catch (SubnetGroupNotFoundException e) {
       throw new CfnNotFoundException(ResourceModel.TYPE_NAME, e.getMessage());
     } catch (Exception e) {
       throw new CfnNotStabilizedException(ResourceModel.TYPE_NAME, model.getSubnetGroupName(), e);
@@ -95,7 +97,7 @@ public abstract class BaseHandlerStd extends BaseHandler<CallbackContext> {
       final DescribeSubnetGroupsResponse response =
               proxy.injectCredentialsAndInvokeV2(Translator.translateToReadRequest(model), client.client()::describeSubnetGroups);
       return response.subnetGroups().stream().findFirst().get();
-    } catch (ClusterNotFoundException e) {
+    } catch (SubnetGroupNotFoundException e) {
       throw new CfnNotFoundException(ResourceModel.TYPE_NAME, e.getMessage());
     } catch (Exception e) {
       throw new CfnServiceInternalErrorException(e);

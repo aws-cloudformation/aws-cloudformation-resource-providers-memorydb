@@ -114,8 +114,6 @@ public class Translator {
             .subnetIds(subnetIds)
             .aRN(subnetGroup.arn())
             .build();
-    System.out.println("Printing Subnet group response");
-    System.out.println(resourceModel.toString());
     return resourceModel;
   }
 
@@ -160,20 +158,6 @@ public class Translator {
   public static List<ResourceModel> translateFromListResponse(final DescribeSubnetGroupsResponse describeSubnetGroupsResponse) {
     return streamOfOrEmpty(describeSubnetGroupsResponse.subnetGroups()).map(
             subnetGroup -> translateFromDescribeSubnetGroupResponse(subnetGroup)).collect(Collectors.toList());
-  }
-
-  /**
-   * Translates resource objects from sdk into a resource model (primary identifier only)
-   * @param awsResponse the aws service describe resource response
-   * @return list of resource models
-   */
-  static List<ResourceModel> translateFromListRequest(final AwsResponse awsResponse) {
-    // e.g. https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-logs/blob/2077c92299aeb9a68ae8f4418b5e932b12a8b186/aws-logs-loggroup/src/main/java/com/aws/logs/loggroup/Translator.java#L75-L82
-    return streamOfOrEmpty(Lists.newArrayList())
-        .map(resource -> ResourceModel.builder()
-            // include only primary identifier
-            .build())
-        .collect(Collectors.toList());
   }
 
   private static <T> Stream<T> streamOfOrEmpty(final Collection<T> collection) {
