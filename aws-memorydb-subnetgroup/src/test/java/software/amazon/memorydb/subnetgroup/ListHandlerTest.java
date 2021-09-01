@@ -1,6 +1,5 @@
 package software.amazon.memorydb.subnetgroup;
 
-import junit.framework.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,6 +68,6 @@ public class ListHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).isNotNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-        Assert.assertEquals(expectedResourceStateModel, desiredResourceStateModel);
+        assertThat(expectedResourceStateModel.equals(desiredResourceStateModel));
     }
 }
