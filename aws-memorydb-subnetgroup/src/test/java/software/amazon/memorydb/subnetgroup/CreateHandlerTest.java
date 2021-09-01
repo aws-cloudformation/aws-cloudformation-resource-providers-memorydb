@@ -1,6 +1,5 @@
 package software.amazon.memorydb.subnetgroup;
 
-import junit.framework.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,7 @@ import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 
 import java.time.Duration;
 
-import static junit.framework.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
@@ -141,7 +140,7 @@ public class CreateHandlerTest extends AbstractTestBase {
         assertThat(response.getResourceModels()).isNull();
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
-        Assert.assertEquals(expectedResourceModel, model);
+        assertThat(expectedResourceModel.equals(model));
 
         verify(sdkClient, atLeastOnce()).serviceName();
     }
