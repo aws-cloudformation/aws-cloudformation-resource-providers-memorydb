@@ -1,10 +1,12 @@
 package software.amazon.memorydb.acl;
 
+import software.amazon.awssdk.services.memorydb.MemoryDbClient;
 import software.amazon.awssdk.services.memorydb.model.DescribeAcLsResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.OperationStatus;
 import software.amazon.cloudformation.proxy.ProgressEvent;
+import software.amazon.cloudformation.proxy.ProxyClient;
 import software.amazon.cloudformation.proxy.ResourceHandlerRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,10 +28,18 @@ public class ListHandlerTest extends AbstractTestBase {
     @Mock
     private Logger logger;
 
+    @Mock
+    private ProxyClient<MemoryDbClient> proxyClient;
+
+    @Mock
+    private MemoryDbClient sdkClient;
+
     @BeforeEach
     public void setup() {
         proxy = mock(AmazonWebServicesClientProxy.class);
         logger = mock(Logger.class);
+        sdkClient = mock(MemoryDbClient.class);
+        proxyClient = MOCK_PROXY(proxy, sdkClient);
     }
 
     @Test
@@ -50,7 +60,7 @@ public class ListHandlerTest extends AbstractTestBase {
             .build();
 
         final ProgressEvent<ResourceModel, CallbackContext> response = handler
-            .handleRequest(proxy, request, new CallbackContext(), logger);
+                .handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
