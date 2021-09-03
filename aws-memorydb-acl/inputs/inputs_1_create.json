@@ -1,0 +1,16 @@
+{
+    "ACLName": "acl-contract-test",
+    "UserNames": [
+        "user-contract-123456789"
+    ],
+    "Tags": [
+        {
+            "Key": "k1",
+            "Value": "v1"
+        },
+        {
+            "Key": "service",
+            "Value": "memorydb"
+        }
+    ]
+}

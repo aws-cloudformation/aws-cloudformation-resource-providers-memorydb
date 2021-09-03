@@ -1,0 +1,6 @@
+{
+    "ACLName": "acl-contract-invalid",
+    "UserNames": [
+        "not-existent"
+    ]
+}
