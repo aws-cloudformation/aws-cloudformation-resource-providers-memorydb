@@ -69,5 +69,6 @@ public class ListHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
         assertThat(expectedResourceStateModel.equals(desiredResourceStateModel));
+
     }
 }
