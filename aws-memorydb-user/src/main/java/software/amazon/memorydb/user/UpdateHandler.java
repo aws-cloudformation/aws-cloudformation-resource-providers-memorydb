@@ -1,6 +1,7 @@
 package software.amazon.memorydb.user;
 
 import com.amazonaws.util.CollectionUtils;
+import com.amazonaws.util.StringUtils;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
+import software.amazon.awssdk.services.memorydb.model.DescribeUsersResponse;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
 import software.amazon.cloudformation.proxy.Logger;
 import software.amazon.cloudformation.proxy.ProgressEvent;
@@ -76,13 +78,19 @@ public class UpdateHandler extends BaseHandlerStd {
 
     private void handleTagging(AmazonWebServicesClientProxy proxy, ProxyClient<MemoryDbClient> client,
         final Map<String, String> tags, final ResourceModel model) {
+
         final Set<Tag> newTags = tags == null ? Collections.emptySet() : new HashSet<>(Translator.translateTags(tags));
-        final Set<Tag> existingTags =
-            new HashSet<>(
+        final Set<Tag> existingTags = new HashSet<>();
+
+        //Fix for unpopulated arn on resource model
+        setModelArn(proxy, client, model);
+        if (!StringUtils.isNullOrEmpty(model.getArn())) {
+            existingTags.addAll(
                 Translator.translateTags(
                     proxy.injectCredentialsAndInvokeV2(
                         Translator.translateToListTagsRequest(model),
                         client.client()::listTags).tagList()));
+        }
 
         final List<Tag> tagsToRemove = existingTags.stream()
             .filter(tag -> !newTags.contains(tag))
@@ -115,6 +123,18 @@ public class UpdateHandler extends BaseHandlerStd {
             .authenticationMode(resourceModel.getAuthenticationMode())
             .arn(resourceModel.getArn())
             .build();
+    }
+
+    private void setModelArn(AmazonWebServicesClientProxy proxy, ProxyClient<MemoryDbClient> client,
+        final ResourceModel model) {
+        if (StringUtils.isNullOrEmpty(model.getArn())) {
+            DescribeUsersResponse response = proxy.injectCredentialsAndInvokeV2(
+                Translator.translateToReadRequest(model),
+                client.client()::describeUsers);
+            if (response.users().size() > 0) {
+                model.setArn(response.users().get(0).arn());
+            }
+        }
     }
 
 }

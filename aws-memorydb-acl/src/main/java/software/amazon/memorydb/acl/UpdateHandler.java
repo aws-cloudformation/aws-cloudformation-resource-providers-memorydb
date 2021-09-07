@@ -1,6 +1,7 @@
 package software.amazon.memorydb.acl;
 
 import com.amazonaws.util.CollectionUtils;
+import com.amazonaws.util.StringUtils;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -129,12 +130,17 @@ public class UpdateHandler extends BaseHandlerStd {
     private void handleTagging(AmazonWebServicesClientProxy proxy, ProxyClient<MemoryDbClient> client,
         final Map<String, String> tags, final ResourceModel model) {
         final Set<Tag> newTags = tags == null ? Collections.emptySet() : new HashSet<>(Translator.translateTags(tags));
-        final Set<Tag> existingTags =
-            new HashSet<>(
+        final Set<Tag> existingTags = new HashSet<>();
+
+        //Fix for unpopulated arn on resource model
+        setModelArn(proxy, client, model);
+        if (!StringUtils.isNullOrEmpty(model.getArn())) {
+            existingTags.addAll(
                 Translator.translateTags(
                     proxy.injectCredentialsAndInvokeV2(
                         Translator.translateToListTagsRequest(model),
                         client.client()::listTags).tagList()));
+        }
 
         final List<Tag> tagsToRemove = existingTags.stream()
             .filter(tag -> !newTags.contains(tag))
@@ -164,6 +170,18 @@ public class UpdateHandler extends BaseHandlerStd {
             .aCLName(resourceModel.getACLName())
             .userNames(resourceModel.getUserNames())
             .build();
+    }
+
+    private void setModelArn(AmazonWebServicesClientProxy proxy, ProxyClient<MemoryDbClient> client,
+        final ResourceModel model) {
+        if (StringUtils.isNullOrEmpty(model.getArn())) {
+            DescribeAcLsResponse response = proxy.injectCredentialsAndInvokeV2(
+                Translator.translateToReadRequest(model),
+                client.client()::describeACLs);
+            if (response.acLs().size() > 0) {
+                model.setArn(response.acLs().get(0).arn());
+            }
+        }
     }
 
 }

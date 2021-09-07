@@ -245,4 +245,70 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(userIdsToRemove.equals(convertedRequest.userNamesToRemove()));
     }
 
+    @Test
+    public void handleRequest_TagUpdateNullArn() {
+        final UpdateAclResponse updateAclResponse = UpdateAclResponse.builder().build();
+        when(sdkClient.updateACL(any(UpdateAclRequest.class))).thenReturn(updateAclResponse);
+
+        final ListTagsResponse listTagsResponse =
+            ListTagsResponse.builder().tagList(
+                ImmutableList.of(
+                    software.amazon.awssdk.services.memorydb.model.Tag.builder().key("test").value("test").build())
+            ).build();
+        AtomicInteger attemptList = new AtomicInteger(2);
+        final ListTagsResponse listTagsAfterPlayResponse =
+            ListTagsResponse.builder().tagList(Translator.translateTagsToSdk(TAG_SET)).build();
+        when(sdkClient.listTags(any(ListTagsRequest.class))).then((m) -> {
+            switch (attemptList.getAndDecrement()) {
+                case 2:
+                    return listTagsResponse;
+                default:
+                    return listTagsAfterPlayResponse;
+            }
+        });
+
+        final DescribeAcLsResponse describeInProgressAclResponse =
+            DescribeAcLsResponse.builder().acLs(buildDefaultAcl(MODIFYING, true, ImmutableList.of("test"))).build();
+        final DescribeAcLsResponse describeUpdatedAclResponse =
+            DescribeAcLsResponse.builder().acLs(buildDefaultAcl(ACTIVE, true, ImmutableList.of("test"))).build();
+        AtomicInteger attempt = new AtomicInteger(2);
+
+        when(sdkClient.tagResource(any(TagResourceRequest.class))).thenReturn(TagResourceResponse.builder().build());
+        when(sdkClient.untagResource(any(UntagResourceRequest.class))).thenReturn(UntagResourceResponse.builder().build());
+        when(sdkClient.describeACLs(any(DescribeAcLsRequest.class))).then((m) -> {
+            switch (attempt.getAndDecrement()) {
+                case 2:
+                    return describeInProgressAclResponse;
+                default:
+                    return describeUpdatedAclResponse;
+            }
+        });
+
+        final UpdateHandler handler = new UpdateHandler();
+
+        final ResourceModel modelPrevious = buildDefaultResourceModel();
+        final ResourceModel modelDesired = buildDefaultResourceModel(ImmutableList.of("test"));
+        modelDesired.setArn(null);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .previousResourceState(modelPrevious)
+            .desiredResourceState(modelDesired)
+            .previousResourceTags(Collections.singletonMap("test", "test"))
+            .desiredResourceTags(Translator.translateTags(TAG_SET))
+            .build();
+
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler
+            .handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModel().getStatus()).isEqualTo(ACTIVE);
+        assertThat(response.getResourceModel()).isEqualTo(request.getDesiredResourceState());
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+        assertThat(modelDesired.getArn()).isNotNull();
+    }
+
 }
