@@ -185,4 +185,45 @@ public class UpdateHandlerTest extends AbstractTestBase {
         assertThat(response.getMessage()).isNull();
         assertThat(response.getErrorCode()).isNull();
     }
+
+    @Test
+    public void handleRequest_TagUpdateNullArn() {
+        final DescribeUsersResponse describeUserResponse =
+            DescribeUsersResponse.builder().users(buildDefaultUser()).build();
+        final ListTagsResponse listTagsResponse =
+            ListTagsResponse.builder().tagList(
+                ImmutableList.of(
+                    software.amazon.awssdk.services.memorydb.model.Tag.builder().key("test").value("test").build())
+            ).build();
+
+        when(sdkClient.listTags(any(ListTagsRequest.class))).thenReturn(listTagsResponse);
+        when(sdkClient.tagResource(any(TagResourceRequest.class))).thenReturn(TagResourceResponse.builder().build());
+        when(sdkClient.untagResource(any(UntagResourceRequest.class))).thenReturn(UntagResourceResponse.builder().build());
+        when(sdkClient.describeUsers(any(DescribeUsersRequest.class))).thenReturn(describeUserResponse);
+
+        final UpdateHandler handler = new UpdateHandler();
+
+        final ResourceModel model = buildDefaultResourceModel();
+        model.setArn(null);
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+            .previousResourceState(model)
+            .desiredResourceState(model)
+            .build();
+        request.setDesiredResourceTags(Translator.translateTags(TAG_SET));
+        request.setPreviousResourceTags(Collections.singletonMap("test", "test"));
+
+        final ProgressEvent<ResourceModel, CallbackContext> response = handler.handleRequest(proxy, request,
+            new CallbackContext(), proxyClient, logger);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.SUCCESS);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        assertThat(response.getResourceModels()).isNull();
+        assertThat(response.getResourceModel().getStatus()).isEqualTo(ACTIVE);
+        assertThat(response.getResourceModel().getUserName()).isEqualTo(USER_NAME);
+        assertThat(response.getMessage()).isNull();
+        assertThat(response.getErrorCode()).isNull();
+        assertThat(model.getArn()).isNotNull();
+    }
 }
