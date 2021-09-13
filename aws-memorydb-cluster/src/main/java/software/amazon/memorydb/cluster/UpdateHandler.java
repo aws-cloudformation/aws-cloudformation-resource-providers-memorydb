@@ -173,8 +173,6 @@ public class UpdateHandler extends BaseHandlerStd {
                                                                         final ProgressEvent<ResourceModel, CallbackContext> progress,
                                                                         final ResourceHandlerRequest<ResourceModel> request,
                                                                         final Logger logger) {
-        logger.log("Previous Resource Tags : " + request.getPreviousResourceTags());
-        logger.log("Desired Resource Tags : " + request.getDesiredResourceTags());
         if (!isUpdateNeeded(request.getDesiredResourceTags(), request.getPreviousResourceTags()) || !isArnPresent(progress.getResourceModel())) {
             logger.log("No tags to update.");
             return listTags(proxy, progress, proxyClient);
