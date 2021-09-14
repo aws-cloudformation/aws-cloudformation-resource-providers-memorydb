@@ -1,7 +1,7 @@
 {
     "ACLName": "acl-contract-test",
     "UserNames": [
-        "user-contract-123456789v2"
+        "acluser-contract-123456v2"
     ],
     "Tags": [
         {
