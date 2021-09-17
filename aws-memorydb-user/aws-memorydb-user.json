@@ -57,6 +57,7 @@
                     "type": "array",
                     "$comment": "List of passwords.",
                     "uniqueItems": true,
+                    "insertionOrder": true,
                     "maxItems": 2,
                     "minItems": 1,
                     "items": {
