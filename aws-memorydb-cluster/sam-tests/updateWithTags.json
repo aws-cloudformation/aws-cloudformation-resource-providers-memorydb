@@ -8,34 +8,44 @@
             "k2": "v2NewKey"
         },
         "previousResourceTags": {
-            "k1": "v1",
             "service": "memorydb"
         },
         "desiredResourceState": {
-            "ClusterName": "mdb-2021-08-22-21-07-43-250-368569"
+            "ClusterName": "mdb-cfn-test-cluster",
+            "SnsTopicArn": "arn:aws:sns:sa-east-1:662555285474:mdb-sns-topic-1",
+            "SnsTopicStatus": "inactive",
+            "SnapshotWindow": "02:00-04:00",
+            "SnapshotRetentionLimit": 10,
+            "SecurityGroupIds": [
+                "sg-072b320deabd0b180",
+                "sg-234c7b6b"
+            ],
+            "ACLName": "raoadi-acl"
         },
         "previousResourceState": {
-            "ClusterName": "mdb-2021-08-22-21-07-43-250-368569",
-            "Description": "CFN Test MemoryDB cluster",
             "Status": "available",
+            "SubnetGroupName": "default",
+            "NodeType": "db.r6g.large",
+            "ClusterName": "mdb-cfn-test-cluster",
+            "SnapshotRetentionLimit": 0,
+            "TLSEnabled": true,
+            "SnsTopicStatus": "ACTIVE",
+            "ParameterGroupStatus": "in-sync",
+            "ACLName": "open-access",
+            "EnginePatchVersion": "6.2.4",
+            "SnsTopicArn": "arn:aws:sns:sa-east-1:662555285474:mdb-sns-topic",
             "NumberOfShards": 1,
             "ClusterEndpoint": {
-                "Address": "clustercfg.mdb-2021-08-22-21-07-43-250-368569.nneedy.memorydb.ap-south-1.amazonaws.com",
-                "Port": 6379
+                "Port": 6379,
+                "Address": "clustercfg.mdb-cfn-test-cluster.y7bwzf.memorydb.sa-east-1.amazonaws.com"
             },
-            "NodeType": "db.r6g.large",
-            "EngineVersion": "6.2",
-            "EnginePatchVersion": "6.2.4",
             "ParameterGroupName": "default.memorydb-redis6",
-            "ParameterGroupStatus": "in-sync",
-            "SubnetGroupName": "default",
-            "TLSEnabled": true,
-            "ARN": "arn:aws:memorydb:ap-south-1:078013142495:cluster/mdb-2021-08-22-21-07-43-250-368569",
-            "SnapshotRetentionLimit": 0,
-            "MaintenanceWindow": "mon:20:00-mon:21:00",
-            "SnapshotWindow": "06:00-07:00",
-            "ACLName": "open-access",
-            "AutoMinorVersionUpgrade": true
+            "SnapshotWindow": "05:00-06:00",
+            "EngineVersion": "6.2",
+            "AutoMinorVersionUpgrade": true,
+            "MaintenanceWindow": "fri:07:00-fri:08:00",
+            "ARN": "arn:aws:memorydb:sa-east-1:662555285474:cluster/mdb-cfn-test-cluster",
+            "Description": "mdb-cfn-test-cluster"
         },
         "logicalResourceIdentifier": "MyResource"
     },

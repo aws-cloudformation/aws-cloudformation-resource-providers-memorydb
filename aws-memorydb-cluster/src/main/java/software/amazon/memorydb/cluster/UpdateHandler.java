@@ -34,7 +34,7 @@ public class UpdateHandler extends BaseHandlerStd {
                                                                           final CallbackContext callbackContext,
                                                                           final ProxyClient<MemoryDbClient> proxyClient,
                                                                           final Logger logger) {
-
+        logger.log(String.format("Resource model: %s", request.getDesiredResourceState()));
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
                 .then(progress -> updateCluster(proxy, proxyClient, progress, request, ClusterUpdateFieldType.DESCRIPTION, logger))
                 .then(progress -> updateCluster(proxy, proxyClient, progress, request, ClusterUpdateFieldType.SECURITY_GROUP_IDS, logger))
@@ -136,7 +136,7 @@ public class UpdateHandler extends BaseHandlerStd {
                                                                 final ResourceModel desiredResourceState,
                                                                 final ClusterUpdateFieldType fieldType,
                                                                 final Logger logger) {
-
+        logger.log(String.format("Updating fieldType : %s" , fieldType.name()));
         return proxy.initiate("AWS-memorydb-Cluster::Update", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
                 .translateToServiceRequest(model -> Translator.translateToUpdateRequest(model, fieldType))
                 .backoffDelay(STABILIZATION_DELAY)

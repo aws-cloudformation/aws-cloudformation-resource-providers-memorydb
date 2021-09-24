@@ -1,6 +1,5 @@
 package software.amazon.memorydb.cluster;
 
-import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -10,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.collections.CollectionUtils;
 import software.amazon.awssdk.services.memorydb.model.Cluster;
 import software.amazon.awssdk.services.memorydb.model.CreateClusterRequest;
 import software.amazon.awssdk.services.memorydb.model.DeleteClusterRequest;
@@ -45,7 +45,20 @@ public class Translator {
      * @return true if modification for the property is requested, otherwise false
      */
     static <T> boolean isModified(T desiredValue, T currentValue) {
-        return (desiredValue != null && !desiredValue.equals(currentValue));
+        return (desiredValue != null && (desiredValue instanceof String ?
+                isModifiedIgnoreCase(desiredValue, currentValue)
+                : desiredValue instanceof List ?
+                isModifiedIgnoreOrder(desiredValue, currentValue)
+                : ! desiredValue.equals(currentValue)));
+    }
+
+    private static <T> boolean isModifiedIgnoreOrder(T desiredValue, T currentValue) {
+        return currentValue != null ? ! CollectionUtils.isEqualCollection((List<?>) desiredValue,
+                (List<?>) currentValue) : true;
+    }
+
+    private static <T> boolean isModifiedIgnoreCase(T desiredValue, T currentValue) {
+        return ! ((String) desiredValue).equalsIgnoreCase((String) currentValue);
     }
 
     static CreateClusterRequest translateToCreateRequest(final ResourceModel model, Map<String, String> tags) {
