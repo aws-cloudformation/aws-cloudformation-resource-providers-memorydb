@@ -61,7 +61,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 A list of VPC subnet IDs for the subnet group.
 
-_Required_: No
+_Required_: Yes
 
 _Type_: List of String
 
