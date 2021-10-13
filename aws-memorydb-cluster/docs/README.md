@@ -102,7 +102,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 The compute and memory capacity of the nodes in the cluster.
 
-_Required_: No
+_Required_: Yes
 
 _Type_: String
 
@@ -202,7 +202,7 @@ _Update requires_: [No interruption](https://docs.aws.amazon.com/AWSCloudFormati
 
 The name of the Access Control List to associate with the cluster.
 
-_Required_: No
+_Required_: Yes
 
 _Type_: String
 

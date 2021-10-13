@@ -1,5 +1,6 @@
 {
     "ParameterGroupName": "cfncontractcparametergroup2",
+    "Family": "memorydb_redis6",
     "Parameters": {
         "maxmemory-policy": "volatile-random",
         "timeout": "20",

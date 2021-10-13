@@ -50,7 +50,7 @@ _Update requires_: [Replacement](https://docs.aws.amazon.com/AWSCloudFormation/l
 
 The name of the parameter group family that this parameter group is compatible with.
 
-_Required_: No
+_Required_: Yes
 
 _Type_: String
 
