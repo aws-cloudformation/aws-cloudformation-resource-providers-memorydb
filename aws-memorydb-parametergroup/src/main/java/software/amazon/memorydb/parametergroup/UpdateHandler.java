@@ -132,7 +132,9 @@ public class UpdateHandler extends BaseHandlerStd {
                 }
 
                 if (clusters.stream()
-                        .filter(cluster -> cluster.parameterGroupName().equals(request.getDesiredResourceState().getParameterGroupName())) // all db clusters that use param group
+                        .filter(cluster -> cluster.parameterGroupName() != null // could be null when the cluster is in create-failed state
+                                && cluster.parameterGroupStatus() != null // same as above
+                                && cluster.parameterGroupName().equals(request.getDesiredResourceState().getParameterGroupName())) // all db clusters that use the param group
                         .allMatch(dbCluster -> STABILIZED_STATUS.equals(dbCluster.parameterGroupStatus()))) { // if all stabilized then move to the next page
 
                     if (describeClustersResponse.nextToken() != null) { // more pages left
