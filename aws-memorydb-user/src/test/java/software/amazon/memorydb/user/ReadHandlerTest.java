@@ -1,11 +1,13 @@
 package software.amazon.memorydb.user;
 
 import java.time.Duration;
+
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
 import software.amazon.awssdk.services.memorydb.model.DescribeUsersRequest;
 import software.amazon.awssdk.services.memorydb.model.DescribeUsersResponse;
 import software.amazon.awssdk.services.memorydb.model.ListTagsRequest;
 import software.amazon.awssdk.services.memorydb.model.ListTagsResponse;
+import software.amazon.awssdk.services.memorydb.model.MemoryDbException;
 import software.amazon.awssdk.services.memorydb.model.UserNotFoundException;
 import software.amazon.cloudformation.exceptions.CfnNotFoundException;
 import software.amazon.cloudformation.proxy.AmazonWebServicesClientProxy;
@@ -23,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.atLeastOnce;
@@ -105,5 +108,31 @@ public class ReadHandlerTest extends AbstractTestBase {
             //expected
             assertThat(e.getCause() instanceof UserNotFoundException).isTrue();
         }
+    }
+
+    @Test
+    public void handleRequest_FailedUnknown() {
+        final ResourceModel model = ResourceModel.builder().build();
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .build();
+
+        doThrow(MemoryDbException.class)
+                .when(proxyClient.client()).describeUsers(any(DescribeUsersRequest.class));
+
+        final ReadHandler handler = new ReadHandler();
+        ProgressEvent<ResourceModel, CallbackContext> response = null;
+        try {
+            response = handler
+                    .handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackContext().getRetriesRemaining()).isEqualTo(0);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        verify(sdkClient, atLeast(1)).serviceName();
     }
 }
