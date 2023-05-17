@@ -21,6 +21,10 @@ public class DeleteHandler extends BaseHandlerStd {
 
         this.logger = logger;
 
+        if (callbackContext.getRetriesRemaining() == null) {
+            callbackContext.setRetriesRemaining(RETRY_COUNT);
+        }
+
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
             .then(progress ->
                 proxy.initiate("AWS-MemoryDB-User::Delete", proxyClient, progress.getResourceModel(),
@@ -41,6 +45,7 @@ public class DeleteHandler extends BaseHandlerStd {
                     .stabilize(
                         (deleteUserRequest, deleteUserResponse, proxyInvocation, model, context) -> isUserDeleted(
                             proxyInvocation, model, logger))
+                    .retryErrorFilter((awsRequest, exception, client, model, context) -> (shouldRetry(exception, context, logger)))
                     .done((deleteUserRequest, deleteUserResponse, proxyInvocation, model, context) -> ProgressEvent
                         .defaultSuccessHandler(null))
             );

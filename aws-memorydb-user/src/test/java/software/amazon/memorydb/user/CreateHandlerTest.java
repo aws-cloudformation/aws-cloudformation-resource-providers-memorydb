@@ -1,6 +1,7 @@
 package software.amazon.memorydb.user;
 
 import java.time.Duration;
+
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
 import software.amazon.awssdk.services.memorydb.model.CreateUserRequest;
 import software.amazon.awssdk.services.memorydb.model.CreateUserResponse;
@@ -8,6 +9,7 @@ import software.amazon.awssdk.services.memorydb.model.DescribeUsersRequest;
 import software.amazon.awssdk.services.memorydb.model.DescribeUsersResponse;
 import software.amazon.awssdk.services.memorydb.model.ListTagsRequest;
 import software.amazon.awssdk.services.memorydb.model.ListTagsResponse;
+import software.amazon.awssdk.services.memorydb.model.MemoryDbException;
 import software.amazon.awssdk.services.memorydb.model.UserAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnAlreadyExistsException;
 import software.amazon.cloudformation.exceptions.CfnInvalidRequestException;
@@ -111,6 +113,31 @@ public class CreateHandlerTest extends AbstractTestBase {
         } catch (CfnAlreadyExistsException e) {
             assertThat(e.getCause() instanceof UserAlreadyExistsException).isTrue();
         }
+        verify(sdkClient, atLeast(1)).serviceName();
+    }
+
+    @Test
+    public void handleRequest_Failed_Unknown() {
+        doThrow(MemoryDbException.class)
+                .when(proxyClient.client()).createUser(any(CreateUserRequest.class));
+
+        final CreateHandler handler = new CreateHandler();
+
+        final ResourceModel model = buildDefaultResourceModel();
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .desiredResourceState(model)
+                .build();
+        ProgressEvent<ResourceModel, CallbackContext> response = null;
+        try {
+            response = handler.handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackContext().getRetriesRemaining()).isEqualTo(0);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
         verify(sdkClient, atLeast(1)).serviceName();
     }
 

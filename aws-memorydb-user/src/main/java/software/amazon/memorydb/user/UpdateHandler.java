@@ -29,6 +29,10 @@ public class UpdateHandler extends BaseHandlerStd {
 
         this.logger = logger;
 
+        if (callbackContext.getRetriesRemaining() == null) {
+            callbackContext.setRetriesRemaining(RETRY_COUNT);
+        }
+
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
             .then(progress -> updateUser(proxy, progress, request, proxyClient))
             .then(progress -> updateTags(proxy, progress, request, proxyClient))
@@ -50,6 +54,7 @@ public class UpdateHandler extends BaseHandlerStd {
                 .stabilize(
                     (updateUserRequest, updateUserResponse, proxyInvocation, model, context) -> isUserStabilized(
                         proxyInvocation, model, logger))
+                .retryErrorFilter((awsRequest, exception, client, model, context) -> (shouldRetry(exception, context, logger)))
                 .progress();
         } else {
             return progress;

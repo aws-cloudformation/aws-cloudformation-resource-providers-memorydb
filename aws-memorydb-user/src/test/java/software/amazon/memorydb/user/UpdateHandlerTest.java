@@ -4,11 +4,13 @@ import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import software.amazon.awssdk.services.memorydb.MemoryDbClient;
 import software.amazon.awssdk.services.memorydb.model.DescribeUsersRequest;
 import software.amazon.awssdk.services.memorydb.model.DescribeUsersResponse;
 import software.amazon.awssdk.services.memorydb.model.ListTagsRequest;
 import software.amazon.awssdk.services.memorydb.model.ListTagsResponse;
+import software.amazon.awssdk.services.memorydb.model.MemoryDbException;
 import software.amazon.awssdk.services.memorydb.model.TagResourceRequest;
 import software.amazon.awssdk.services.memorydb.model.TagResourceResponse;
 import software.amazon.awssdk.services.memorydb.model.UntagResourceRequest;
@@ -32,6 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.atLeastOnce;
@@ -145,6 +148,36 @@ public class UpdateHandlerTest extends AbstractTestBase {
         } catch (CfnNotFoundException e) {
             assertThat(e.getCause() instanceof UserNotFoundException).isTrue();
         }
+    }
+
+    @Test
+    public void handleRequest_FailureUnknown() {
+        doThrow(MemoryDbException.class)
+                .when(proxyClient.client()).updateUser(any(UpdateUserRequest.class));
+
+        final UpdateHandler handler = new UpdateHandler();
+
+        final ResourceModel modelPrevious = buildDefaultResourceModel();
+        final ResourceModel modelDesired = buildDefaultResourceModel();
+        modelDesired.setAccessString(modelPrevious.getAccessString() + "v2");
+
+        final ResourceHandlerRequest<ResourceModel> request = ResourceHandlerRequest.<ResourceModel>builder()
+                .previousResourceState(modelPrevious)
+                .desiredResourceState(modelDesired)
+                .build();
+        ProgressEvent<ResourceModel, CallbackContext> response = null;
+        try {
+             response = handler
+                    .handleRequest(proxy, request, new CallbackContext(), proxyClient, logger);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+        assertThat(response).isNotNull();
+        assertThat(response.getStatus()).isEqualTo(OperationStatus.FAILED);
+        assertThat(response.getCallbackContext().getRetriesRemaining()).isEqualTo(0);
+        assertThat(response.getCallbackDelaySeconds()).isEqualTo(0);
+        verify(sdkClient, atLeast(1)).serviceName();
     }
 
     @Test

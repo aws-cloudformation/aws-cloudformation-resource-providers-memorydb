@@ -47,6 +47,7 @@ public class DeleteHandler extends BaseHandlerStd {
 
         return proxy.initiate("AWS-memorydb-SubnetGroup::Delete", proxyClient, request.getDesiredResourceState(), progress.getCallbackContext())
                 .translateToServiceRequest(Translator::translateToDeleteRequest)
+                .backoffDelay(STABILIZATION_DELAY)
                 .makeServiceCall((awsRequest, client) -> handleExceptions(() ->
                         client.injectCredentialsAndInvokeV2(awsRequest, client.client()::deleteSubnetGroup)))
                 .stabilize((awsRequest, awsResponse, client, model, context) -> isDeleted(proxyClient, model))

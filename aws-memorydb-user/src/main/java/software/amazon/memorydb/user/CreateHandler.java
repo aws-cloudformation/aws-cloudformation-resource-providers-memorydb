@@ -31,13 +31,19 @@ public class CreateHandler extends BaseHandlerStd {
             throw new CfnInvalidRequestException(ID_WRONG_FORMAT);
         }
 
+        if (callbackContext.getRetriesRemaining() == null) {
+            callbackContext.setRetriesRemaining(RETRY_COUNT);
+        }
+
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
             .then(progress ->
                 proxy.initiate("AWS-MemoryDB-User::Create", proxyClient, progress.getResourceModel(),
                     progress.getCallbackContext())
                     .translateToServiceRequest(Translator::translateToCreateRequest)
+                    .backoffDelay(STABILIZATION_DELAY)
                     .makeServiceCall((awsRequest, client) -> handleExceptions(() ->
                         client.injectCredentialsAndInvokeV2(awsRequest, client.client()::createUser)))
+                    .retryErrorFilter((awsRequest, exception, client, model, context) -> (shouldRetry(exception, context, logger)))
                     .progress()
             )
             .then(progress -> new ReadHandler().handleRequest(proxy, request, callbackContext, proxyClient, logger));

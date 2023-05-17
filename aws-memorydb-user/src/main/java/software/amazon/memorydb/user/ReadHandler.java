@@ -19,6 +19,10 @@ public class ReadHandler extends BaseHandlerStd {
 
         this.logger = logger;
 
+        if (callbackContext.getRetriesRemaining() == null) {
+            callbackContext.setRetriesRemaining(RETRY_COUNT);
+        }
+
         logger.log(String.format("%s read handler is being invoked", ResourceModel.TYPE_NAME));
         return ProgressEvent.progress(request.getDesiredResourceState(), callbackContext)
             .then(progress -> describeUser(proxy, progress, proxyClient))
@@ -37,6 +41,7 @@ public class ReadHandler extends BaseHandlerStd {
             .translateToServiceRequest(Translator::translateToReadRequest)
             .makeServiceCall((awsRequest, client) -> handleExceptions(() ->
                 client.injectCredentialsAndInvokeV2(awsRequest, client.client()::describeUsers)))
+            .retryErrorFilter((awsRequest, exception, client, model, context) -> (shouldRetry(exception, context, logger)))
             .done((describeUserRequest, describeUserResponse, proxyInvocation, resourceModel, context) ->
                 ProgressEvent.progress(Translator.translateFromReadResponse(describeUserResponse), context));
     }
@@ -50,6 +55,7 @@ public class ReadHandler extends BaseHandlerStd {
             .initiate("AWS-MemoryDB-User::ListTags", proxyClient, progress.getResourceModel(), progress.getCallbackContext())
             .translateToServiceRequest(Translator::translateToListTagsRequest)
             .makeServiceCall((awsRequest, client) -> handleExceptions(() -> client.injectCredentialsAndInvokeV2(awsRequest, client.client()::listTags)))
+            .retryErrorFilter((awsRequest, exception, client, model, context) -> (shouldRetry(exception, context, logger)))
             .done( (listTagsRequest, listTagsResponse, proxyInvocation, resourceModel, context) -> {
                     resourceModel.setTags(Translator.translateTags(listTagsResponse.tagList()));
                     return ProgressEvent.progress(resourceModel, context);
